@@ -13,8 +13,49 @@ import type {
 } from './types';
 import type { ActflLevel } from '$lib/actfl';
 import { actflAt, actflBand, actflIndex, actflToStoryLevel, isActflLevel, migrateCefrToActfl } from '$lib/actfl';
+import { getUser } from '$lib/stores/auth.svelte';
 
-const STORAGE_KEY = 'ling_db_v1';
+const LEGACY_STORAGE_KEY = 'ling_db_v1';
+
+/**
+ * Progress is namespaced per account so every user gets their own store on
+ * shared devices. Logged out → the legacy device-wide key (unchanged).
+ */
+export function dbKeyFor(userId: string | null): string {
+	return userId ? `${LEGACY_STORAGE_KEY}_u_${userId}` : LEGACY_STORAGE_KEY;
+}
+
+function currentKey(): string {
+	try {
+		return dbKeyFor(getUser()?.id ?? null);
+	} catch {
+		return LEGACY_STORAGE_KEY;
+	}
+}
+
+/**
+ * One-time move of pre-login device data into a fresh account store.
+ * Only copies when the account store is empty and the device store is not;
+ * the device copy is left intact.
+ */
+export function migrateLegacyStore(userId: string): boolean {
+	try {
+		if (typeof localStorage === 'undefined') return false;
+		if (localStorage.getItem(`ling_migrated_${userId}`)) return false;
+		const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+		const targetRaw = localStorage.getItem(dbKeyFor(userId));
+		const legacy = legacyRaw ? (JSON.parse(legacyRaw) as DatabaseShape) : null;
+		const hasLegacyData = !!legacy && Array.isArray(legacy.languages) && legacy.languages.length > 0;
+		const target = targetRaw ? (JSON.parse(targetRaw) as DatabaseShape) : null;
+		const targetEmpty = !target || !Array.isArray(target.languages) || target.languages.length === 0;
+		localStorage.setItem(`ling_migrated_${userId}`, '1');
+		if (!hasLegacyData || !targetEmpty || !legacy) return false;
+		localStorage.setItem(dbKeyFor(userId), JSON.stringify({ ...emptyDb(), ...legacy }));
+		return true;
+	} catch {
+		return false;
+	}
+}
 
 export function uid(prefix = 'id'): string {
 	return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
@@ -37,7 +78,7 @@ function emptyDb(): DatabaseShape {
 function load(): DatabaseShape {
 	try {
 		if (typeof localStorage === 'undefined') return emptyDb();
-		const raw = localStorage.getItem(STORAGE_KEY);
+		const raw = localStorage.getItem(currentKey());
 		if (!raw) return emptyDb();
 		const parsed = JSON.parse(raw) as DatabaseShape;
 		if (parsed.version !== 1) return emptyDb();
@@ -67,7 +108,7 @@ function load(): DatabaseShape {
 
 function save(db: DatabaseShape): void {
 	try {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+		localStorage.setItem(currentKey(), JSON.stringify(db));
 	} catch (err) {
 		console.warn('[db] persist failed:', err);
 	}

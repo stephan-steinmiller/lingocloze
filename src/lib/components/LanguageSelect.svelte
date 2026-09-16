@@ -2,21 +2,28 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getLanguages } from '$lib/db/database';
-	import { getActiveLanguageId, setActiveLanguageId } from '$lib/stores/app.svelte';
+	import { getActiveLanguageId, getDbRevision, setActiveLanguageId, touchDb } from '$lib/stores/app.svelte';
+	import { getUser } from '$lib/stores/auth.svelte';
+
+	// Re-read on every db touch AND on account switch (stores are per-user).
+	let rev = $derived(getDbRevision());
+	let uid = $derived(getUser()?.id ?? null);
+	let languages = $derived.by(() => {
+		void rev;
+		void uid;
+		return getLanguages();
+	});
+	let activeId = $derived.by(() => {
+		void rev;
+		void uid;
+		return getActiveLanguageId();
+	});
 
 	interface Props {
 		compact?: boolean;
 	}
 
 	let { compact = false }: Props = $props();
-
-	let languages = $state(getLanguages());
-	let activeId = $state(getActiveLanguageId());
-
-	export function refresh(): void {
-		languages = getLanguages();
-		activeId = getActiveLanguageId();
-	}
 
 	async function pick(e: Event): Promise<void> {
 		const id = (e.target as HTMLSelectElement).value;
@@ -25,7 +32,7 @@
 			return;
 		}
 		setActiveLanguageId(id);
-		activeId = id;
+		touchDb();
 	}
 </script>
 

@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { FloppyDiskIcon, Key01Icon, ViewIcon, ViewOffIcon, CheckmarkCircle02Icon } from '@hugeicons/core-free-icons';
+	import { FloppyDiskIcon, Key01Icon, ViewIcon, ViewOffIcon, CheckmarkCircle02Icon, UserCircleIcon, Logout01Icon } from '@hugeicons/core-free-icons';
 	import ThemeSelect from '$lib/components/ThemeSelect.svelte';
+	import { getUser, signOut } from '$lib/stores/auth.svelte';
+	import { touchDb } from '$lib/stores/app.svelte';
 	import {
 		PROVIDERS,
 		hasApiKey,
@@ -11,12 +14,17 @@
 		type AIProvider
 	} from '$lib/ai/providers';
 	import { exportDatabase, importDatabase, resetDatabase } from '$lib/db/database';
-	import { touchDb } from '$lib/stores/app.svelte';
 
 	let settings = $state(loadSettings());
 	let showKey = $state(false);
 	let savedTick = $state(false);
 	let ioError = $state('');
+	let user = $derived(getUser());
+
+	async function logout(): Promise<void> {
+		await signOut();
+		touchDb();
+	}
 
 	function save(): void {
 		saveSettings(settings);
@@ -65,6 +73,29 @@
 
 <h1 class="mb-1 text-2xl font-bold">Settings</h1>
 <p class="mb-6 opacity-70">Bring your own key. Everything runs local-first.</p>
+
+<div class="card mb-4 bg-base-100 shadow-sm">
+	<div class="card-body flex-row items-center gap-3 px-4 py-3">
+		<HugeiconsIcon icon={UserCircleIcon} size={26} />
+		{#if user}
+			<div class="flex-1">
+				<p class="font-semibold">{user.email}</p>
+				<p class="text-sm opacity-60">Progress is stored under this account.</p>
+			</div>
+			<button class="btn btn-outline btn-sm" onclick={logout}>
+				<HugeiconsIcon icon={Logout01Icon} size={16} /> Log out
+			</button>
+		{:else}
+			<div class="flex-1">
+				<p class="font-semibold">Not logged in</p>
+				<p class="text-sm opacity-60">Log in for per-account progress.</p>
+			</div>
+			<button class="btn btn-primary btn-sm" onclick={() => goto(resolve('/login'))}>
+				Log in
+			</button>
+		{/if}
+	</div>
+</div>
 
 <div class="card mb-4 bg-base-100 shadow-sm">
 	<div class="card-body">

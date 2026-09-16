@@ -1,6 +1,16 @@
 import { loadSettings, saveSettings, type BYOKSettings } from '$lib/ai/providers';
+import { getUser } from './auth.svelte';
 
 const ACTIVE_KEY = 'ling_active_lang_v1';
+
+function activeKey(): string {
+	try {
+		const uid = getUser()?.id;
+		return uid ? `${ACTIVE_KEY}_u_${uid}` : ACTIVE_KEY;
+	} catch {
+		return ACTIVE_KEY;
+	}
+}
 
 // Settings are a plain module-level reactive state (Svelte 5 runes).
 let settingsState: BYOKSettings = loadSettings();
@@ -19,7 +29,7 @@ export const settingsStore = {
 };
 
 let activeLanguageId: string | null =
-	typeof localStorage !== 'undefined' ? localStorage.getItem(ACTIVE_KEY) : null;
+	typeof localStorage !== 'undefined' ? localStorage.getItem(activeKey()) : null;
 
 /** Bump after every DB mutation so pages re-read from the store. */
 let dbRevision = $state(0);
@@ -39,10 +49,20 @@ export function getActiveLanguageId(): string | null {
 export function setActiveLanguageId(id: string | null): void {
 	activeLanguageId = id;
 	try {
-		if (id) localStorage.setItem(ACTIVE_KEY, id);
-		else localStorage.removeItem(ACTIVE_KEY);
+		if (id) localStorage.setItem(activeKey(), id);
+		else localStorage.removeItem(activeKey());
 	} catch {
 		/* ignore */
+	}
+}
+
+/** Re-read the active language (call after login/logout switches stores). */
+export function refreshActiveLanguage(): void {
+	try {
+		activeLanguageId =
+			typeof localStorage !== 'undefined' ? localStorage.getItem(activeKey()) : null;
+	} catch {
+		activeLanguageId = null;
 	}
 }
 

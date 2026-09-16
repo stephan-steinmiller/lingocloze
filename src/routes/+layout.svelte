@@ -10,9 +10,12 @@
 		Cards01Icon,
 		Home01Icon,
 		Layers01Icon,
+		Login01Icon,
+		Logout01Icon,
 		Settings03Icon,
 		StarIcon,
-		SwatchBookIcon
+		SwatchBookIcon,
+		UserCircleIcon
 	} from '@hugeicons/core-free-icons';
 	import favicon from '$lib/assets/favicon.svg';
 	import JobIndicator from '$lib/components/JobIndicator.svelte';
@@ -20,10 +23,13 @@
 	import {
 		getActiveLanguageId,
 		isSidebarCollapsed,
+		refreshActiveLanguage,
 		setActiveLanguageId,
-		toggleSidebar
+		toggleSidebar,
+		touchDb
 	} from '$lib/stores/app.svelte';
-	import { getLanguages } from '$lib/db/database';
+	import { getLanguages, migrateLegacyStore } from '$lib/db/database';
+	import { getUser, initAuth, signOut } from '$lib/stores/auth.svelte';
 	import './layout.css';
 
 	let { children } = $props();
@@ -31,18 +37,40 @@
 	let languages = $state(getLanguages());
 	let dbReady = $state(false);
 	let collapsed = $derived(isSidebarCollapsed());
+	let user = $derived(getUser());
 
-	onMount(async () => {
-		// Native SQLite on Capacitor shells; instant no-op on web where the
-		// localStorage document store is used.
-		await initNativeDatabase();
-		dbReady = true;
+	function reloadLanguages(): void {
 		languages = getLanguages();
-		// Auto-select the first language if none is active.
 		if (!getActiveLanguageId() && languages.length > 0) {
 			setActiveLanguageId(languages[0].id);
 		}
+	}
+
+	onMount(async () => {
+		// Auth first (local session read), then the database.
+		await initAuth();
+		await initNativeDatabase();
+		dbReady = true;
+		reloadLanguages();
 	});
+
+	// React to login / logout / account switch: migrate device data once,
+	// re-point the active language, and refresh every revision-tracked view.
+	let lastUid: string | null | undefined = undefined;
+	$effect(() => {
+		const uid = getUser()?.id ?? null;
+		if (uid === lastUid) return;
+		lastUid = uid;
+		if (uid) migrateLegacyStore(uid);
+		refreshActiveLanguage();
+		reloadLanguages();
+		touchDb();
+	});
+
+	async function logout(): Promise<void> {
+		await signOut();
+		touchDb();
+	}
 
 	const nav = [
 		{ href: '/', label: 'Home', icon: Home01Icon },
@@ -179,6 +207,36 @@
 				</li>
 			{/if}
 			<div class="px-2 pt-2">
+				{#if user}
+					<div class="mb-2 flex items-center gap-2 {collapsed ? 'lg:justify-center' : ''}">
+						<span
+							class="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-primary font-bold text-primary-content"
+							title={user.email ?? 'Account'}
+						>
+							{(user.email ?? '?').slice(0, 1).toUpperCase()}
+						</span>
+						<span class="min-w-0 flex-1 truncate text-sm {collapsed ? 'lg:hidden' : ''}">
+							{user.email}
+						</span>
+						<button
+							class="btn btn-ghost btn-xs {collapsed ? 'lg:hidden' : ''}"
+							onclick={logout}
+							title="Log out"
+							aria-label="Log out"
+						>
+							<HugeiconsIcon icon={Logout01Icon} size={16} />
+						</button>
+					</div>
+				{:else}
+					<a
+						href={resolve('/login')}
+						class="btn mb-2 w-full btn-outline btn-sm {collapsed ? 'lg:btn-square' : ''}"
+						title="Log in"
+					>
+						<HugeiconsIcon icon={Login01Icon} size={18} />
+						<span class={collapsed ? 'lg:hidden' : ''}>Log in</span>
+					</a>
+				{/if}
 				<JobIndicator />
 			</div>
 		</aside>
