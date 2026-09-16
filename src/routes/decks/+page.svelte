@@ -72,7 +72,7 @@
 
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 	<h1 class="text-2xl font-bold">Cloze decks</h1>
-	<LanguageSelect compact />
+	<LanguageSelect />
 </div>
 
 {#if !lang}

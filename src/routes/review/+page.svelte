@@ -270,7 +270,7 @@
 			/>
 			translations
 		</label>
-		<LanguageSelect compact />
+		<LanguageSelect />
 	</div>
 </div>
 
