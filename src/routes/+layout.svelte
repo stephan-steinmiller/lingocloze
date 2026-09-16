@@ -8,7 +8,7 @@
 		ArrowRightDoubleIcon,
 		BookOpen01Icon,
 		Cards01Icon,
-		Home01Icon,
+		Home05Icon,
 		Layers01Icon,
 		Menu01Icon,
 		Settings03Icon,
@@ -45,7 +45,7 @@
 	});
 
 	const nav = [
-		{ href: '/', label: 'Home', icon: Home01Icon },
+		{ href: '/', label: 'Home', icon: Home05Icon },
 		{ href: '/review', label: 'Review', icon: Cards01Icon },
 		{ href: '/decks', label: 'Decks', icon: Layers01Icon },
 		{ href: '/stories', label: 'Stories', icon: BookOpen01Icon },
@@ -112,7 +112,7 @@
 		<aside
 			class="menu min-h-full gap-1 bg-base-100 p-4 transition-[width] duration-300 ease-in-out {collapsed
 				? 'w-20 lg:w-20 rail-collapsed'
-				: 'w-52'}"
+				: 'w-48'}"
 		>
 			<li>
 				<a
