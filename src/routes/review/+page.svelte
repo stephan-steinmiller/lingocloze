@@ -223,7 +223,40 @@
 	}
 
 	function onKey(e: KeyboardEvent): void {
-		if (e.key === 'Enter' && !revealed) void check();
+		// Never fight the browser or key repeats.
+		if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+		const t = e.target as HTMLElement | null;
+		const typing =
+			!!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT');
+		if (e.key === 'Escape') {
+			(document.activeElement as HTMLElement | null)?.blur?.();
+			return;
+		}
+		if (e.key === 'Enter') {
+			if (!revealed) void check();
+			else if (!wasCorrect) {
+				if (canRequeue()) requeue();
+				else skipForNow();
+			}
+			// Revealed + correct: pick 1/2/3 deliberately, no Enter shortcut.
+			return;
+		}
+		// Letter/number shortcuts only outside text fields (so typing stays intact).
+		if (typing) return;
+		const k = e.key.toLowerCase();
+		if (!revealed) {
+			if (k === 'h' && card?.hint) showHint = !showHint;
+			else if (k === 'i') dontKnow();
+		} else if (wasCorrect) {
+			if (k === '1') grade('hard');
+			else if (k === '2') grade('fine');
+			else if (k === '3') grade('easy');
+		} else {
+			if (k === 'r') {
+				if (canRequeue()) requeue();
+				else skipForNow();
+			}
+		}
 	}
 
 	/**
@@ -392,6 +425,7 @@
 					<button class="btn btn-ghost btn-xs" onclick={() => (showHint = !showHint)}>
 						<HugeiconsIcon icon={Idea01Icon} size={14} />
 						{showHint ? 'Hide hint' : 'Show hint'}
+						<kbd class="kbd kbd-xs">H</kbd>
 					</button>
 					{#if showHint}<p class="mt-1 text-sm opacity-70">{card.hint}</p>{/if}
 				</div>
@@ -445,23 +479,30 @@
 						onclick={dontKnow}
 						title="Reveal the answer as a miss, without guessing"
 					>
-						I don't know
+						I don't know <kbd class="kbd kbd-xs">I</kbd>
 					</button>
 				{:else if wasCorrect}
 					<div class="grid w-full grid-cols-3 gap-2">
 						<button class="btn btn-outline btn-warning" onclick={() => grade('hard')}>
-							Hard<span class="hidden text-xs opacity-60 sm:inline">{preview('hard')}</span>
+							Hard <kbd class="kbd kbd-xs">1</kbd><span
+								class="hidden text-xs opacity-60 sm:inline">{preview('hard')}</span
+							>
 						</button>
 						<button class="btn btn-outline btn-success" onclick={() => grade('fine')}>
-							Fine<span class="hidden text-xs opacity-60 sm:inline">{preview('fine')}</span>
+							Fine <kbd class="kbd kbd-xs">2</kbd><span
+								class="hidden text-xs opacity-60 sm:inline">{preview('fine')}</span
+							>
 						</button>
 						<button class="btn btn-outline btn-info" onclick={() => grade('easy')}>
-							Easy<span class="hidden text-xs opacity-60 sm:inline">{preview('easy')}</span>
+							Easy <kbd class="kbd kbd-xs">3</kbd><span
+								class="hidden text-xs opacity-60 sm:inline">{preview('easy')}</span
+							>
 						</button>
 					</div>
 				{:else if canRequeue()}
 					<button class="btn flex-1 btn-primary" onclick={requeue}>
 						<HugeiconsIcon icon={ReloadIcon} size={18} /> Try again later in this session
+						<kbd class="kbd kbd-xs">R</kbd>
 					</button>
 				{:else}
 					<button class="btn flex-1 btn-primary" onclick={skipForNow}>
@@ -471,4 +512,10 @@
 			</div>
 		</div>
 	</div>
+	<p class="mt-3 hidden text-center text-xs opacity-50 sm:block">
+		Keys: <kbd class="kbd kbd-xs">Enter</kbd> check · <kbd class="kbd kbd-xs">H</kbd> hint ·
+		<kbd class="kbd kbd-xs">I</kbd> skip · <kbd class="kbd kbd-xs">1</kbd
+		><kbd class="kbd kbd-xs">2</kbd><kbd class="kbd kbd-xs">3</kbd> grade ·
+		<kbd class="kbd kbd-xs">R</kbd> retry · <kbd class="kbd kbd-xs">Esc</kbd> unfocus
+	</p>
 {/if}
