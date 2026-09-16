@@ -164,6 +164,24 @@
 			</label>
 		{/if}
 
+		{#if settings.provider === 'compatible' || settings.provider === 'opencode-go'}
+			<label class="fieldset mt-2 w-full max-w-md">
+				<legend class="fieldset-legend">CORS proxy URL (optional)</legend>
+				<input
+					class="input"
+					placeholder="https://lingocloze-proxy.<you>.workers.dev — needed on static hosting"
+					bind:value={settings.proxyUrl}
+					onchange={save}
+					autocomplete="off"
+					spellcheck={false}
+				/>
+				<p class="mt-1 text-xs opacity-60">
+					Only needed where the app has no server route (e.g. surge.sh) for gateways
+					without CORS headers. See worker/ to self-host one free.
+				</p>
+			</label>
+		{/if}
+
 		<label class="fieldset mt-2 w-full max-w-md">
 			<legend class="fieldset-legend">API key</legend>
 			<div class="flex w-full gap-2">

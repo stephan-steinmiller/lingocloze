@@ -12,6 +12,13 @@ export interface BYOKSettings {
 	apiKey: string;
 	/** Only for "compatible" (OpenRouter, Ollama, Together, custom gateway…) */
 	baseURL: string;
+	/**
+	 * Optional CORS proxy speaking the /api/zen { url, headers, body }
+	 * protocol (our SvelteKit route, or the Cloudflare worker in worker/).
+	 * Required on static hosting for gateways without CORS headers (Zen/Go).
+	 * Empty = same-origin /api/zen.
+	 */
+	proxyUrl: string;
 }
 
 const SETTINGS_KEY = 'ling_byok_v1';
@@ -133,7 +140,7 @@ export const PROVIDERS: Array<{
 ];
 
 export function defaultSettings(): BYOKSettings {
-	return { provider: 'openai', model: 'gpt-4o-mini', apiKey: '', baseURL: '' };
+	return { provider: 'openai', model: 'gpt-4o-mini', apiKey: '', baseURL: '', proxyUrl: '' };
 }
 
 export function loadSettings(): BYOKSettings {
@@ -160,11 +167,14 @@ export function hasApiKey(s: BYOKSettings): boolean {
 }
 
 /**
- * fetch wrapper that routes OpenAI-compatible calls through our same-origin
- * /api/zen proxy (see src/routes/api/zen/+server.ts). Fixes gateways without
- * CORS headers and injects required extras like x-opencode-session.
+ * fetch wrapper that routes OpenAI-compatible calls through a same-origin
+ * /api/zen proxy — or a custom CORS proxy URL (Cloudflare worker) on static
+ * hosting. Fixes gateways without CORS headers and injects required extras
+ * like x-opencode-session.
  */
-async function proxyFetch(input: string | URL | Request, init?: RequestInit): Promise<Response> {
+function makeProxyFetch(proxyUrl?: string): typeof fetch {
+	const endpoint = proxyUrl?.trim() ? proxyUrl.trim() : '/api/zen';
+	return (async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
 	let url: string;
 	let headers: Record<string, string> = {};
 	let body: unknown;
@@ -194,7 +204,7 @@ async function proxyFetch(input: string | URL | Request, init?: RequestInit): Pr
 			/* keep as text */
 		}
 	}
-	return fetch('/api/zen', {
+	return fetch(endpoint, {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({ url, headers, body })
@@ -203,11 +213,12 @@ async function proxyFetch(input: string | URL | Request, init?: RequestInit): Pr
 		if (!contentType.includes('application/json')) {
 			// Static hosts (no server routes) answer with the SPA fallback page.
 			throw new Error(
-				'AI proxy unreachable: this hosting has no server routes. ' +
-					'Use OpenAI/Anthropic/Google keys directly, or run the dev server for gated providers (Zen/Go).'
+				'AI proxy unreachable: configure a CORS proxy URL below, use ' +
+					'OpenAI/Anthropic/Google keys directly, or run the dev server for gated providers (Zen/Go).'
 			);
 		}
 		return res;
+	});
 	});
 }
 
@@ -232,7 +243,7 @@ export function getLanguageModel(s: BYOKSettings): LanguageModel {
 				name: 'custom',
 				apiKey: s.apiKey.trim() || 'no-key',
 				baseURL: s.baseURL.trim() || 'http://localhost:11434/v1',
-				fetch: proxyFetch
+				fetch: makeProxyFetch(s.proxyUrl)
 			});
 			return compat(s.model);
 		}
@@ -246,7 +257,7 @@ export function getLanguageModel(s: BYOKSettings): LanguageModel {
 				const go = createOpenAI({
 					apiKey: s.apiKey.trim() || undefined,
 					baseURL: OPENCODE_GO_BASE_URL,
-					fetch: proxyFetch
+					fetch: makeProxyFetch(s.proxyUrl)
 				});
 				return go.responses(model);
 			}
@@ -254,14 +265,14 @@ export function getLanguageModel(s: BYOKSettings): LanguageModel {
 				const claude = createAnthropic({
 					apiKey: s.apiKey.trim() || undefined,
 					baseURL: OPENCODE_GO_BASE_URL,
-					fetch: proxyFetch
+					fetch: makeProxyFetch(s.proxyUrl)
 				});
 				return claude(model);
 			}
 			const go = createOpenAI({
 				apiKey: s.apiKey.trim() || undefined,
 				baseURL: OPENCODE_GO_BASE_URL,
-				fetch: proxyFetch
+				fetch: makeProxyFetch(s.proxyUrl)
 			});
 			return go.chat(model);
 		}
