@@ -39,6 +39,7 @@
 	import { updateLanguage } from '$lib/db/database';
 
 	let cardEl: HTMLElement | undefined = $state();
+	let answerInput: HTMLInputElement | undefined = $state();
 
 	let activeId = $derived(getActiveLanguageId());
 	let deckFilter = $derived(page.url.searchParams.get('deck'));
@@ -81,6 +82,7 @@
 		checking = false;
 		acceptedVariant = false;
 		startedAt = Date.now();
+		focusAnswer();
 	}
 
 	// (Re)build when the language or deck filter changes — but NOT on every
@@ -126,6 +128,18 @@
 		showHint = false;
 		startedAt = Date.now();
 		if (cardEl) animate(cardEl, { opacity: [0, 1], x: [24, 0] }, { duration: 0.25 });
+		focusAnswer();
+	}
+
+	/** Focus the answer field (desktop pointers only — never pop mobile keyboards). */
+	function focusAnswer(): void {
+		try {
+			if (typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches) {
+				requestAnimationFrame(() => answerInput?.focus());
+			}
+		} catch {
+			/* ignore */
+		}
 	}
 
 	async function check(): Promise<void> {
@@ -230,6 +244,18 @@
 			!!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT');
 		if (e.key === 'Escape') {
 			(document.activeElement as HTMLElement | null)?.blur?.();
+			return;
+		}
+		if (e.key === ' ') {
+			// Space re-enters the answer field — unless focus is somewhere it
+			// already means something (typing, buttons, links keep natives).
+			const t = e.target as HTMLElement | null;
+			const tag = t?.tagName;
+			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || tag === 'A') {
+				return;
+			}
+			e.preventDefault();
+			if (card && !revealed) answerInput?.focus();
 			return;
 		}
 		if (e.key === 'Enter') {
@@ -398,6 +424,7 @@
 						class="input mx-1 inline-block w-44 max-w-full text-center font-bold input-primary"
 						placeholder="…"
 						bind:value={typed}
+						bind:this={answerInput}
 						autocomplete="off"
 						spellcheck={false}
 						disabled={checking}
@@ -514,8 +541,8 @@
 	</div>
 	<p class="mt-3 hidden text-center text-xs opacity-50 sm:block">
 		Keys: <kbd class="kbd kbd-xs">Enter</kbd> check · <kbd class="kbd kbd-xs">H</kbd> hint ·
-		<kbd class="kbd kbd-xs">I</kbd> skip · <kbd class="kbd kbd-xs">1</kbd
-		><kbd class="kbd kbd-xs">2</kbd><kbd class="kbd kbd-xs">3</kbd> grade ·
+		<kbd class="kbd kbd-xs">I</kbd> skip · <kbd class="kbd kbd-xs">Space</kbd> focus ·
+		<kbd class="kbd kbd-xs">1</kbd><kbd class="kbd kbd-xs">2</kbd><kbd class="kbd kbd-xs">3</kbd> grade ·
 		<kbd class="kbd kbd-xs">R</kbd> retry · <kbd class="kbd kbd-xs">Esc</kbd> unfocus
 	</p>
 {/if}
