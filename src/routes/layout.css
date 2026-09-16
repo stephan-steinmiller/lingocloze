@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+
+@plugin 'daisyui' {
+	themes: all;
+}
+
+/* App-wide polish */
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	min-height: 100vh;
+}
+
+::selection {
+	background: oklch(var(--p, 0.65 0.2 280) / 0.3);
+}
+
+/* Cloze blank: a dashed gap (no literal underscores — those double up). */
+.cloze-blank {
+	display: inline-block;
+	min-width: 4rem;
+	border-bottom-width: 2px;
+	border-bottom-style: dashed;
+}
+
+/* Active mobile dock tab: primary-tinted pill like the sidebar. Unlayered so
+   it wins over daisyUI's dock styles; the default indicator bar is hidden. */
+.dock a.dock-active {
+	background-color: color-mix(in oklab, var(--color-primary) 14%, transparent);
+	color: var(--color-primary);
+}
+.dock a.dock-active::after {
+	display: none;
+}
+
+/* Story prose */
+.story-body {
+	line-height: 2;
+	font-size: 1.125rem;
+}
+
+/*
+ * Sidebar rows: identical 3rem height expanded AND collapsed, so toggling
+ * never moves anything vertically (no absolute positioning needed).
+ * Unlayered on purpose — daisyUI v5's layered menu styles win over Tailwind
+ * utilities on equal specificity (see .rail-circle below).
+ */
+.side-item {
+	height: 3rem;
+	padding-top: 0;
+	padding-bottom: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+/* Sidebar icons render at exactly their specified size, never squeezed by
+   flex overflow. Unlayered so nothing overrides it. */
+.side-item svg {
+	width: 22px;
+	height: 22px;
+	flex: none;
+}
+
+/*
+ * Collapsed icon rail: perfect circles. Same unlayered reasoning as above.
+ * min-height matches .side-item so circles equal the rail inner width
+ * (w-20 minus aside p-4). Scoped to desktop (mobile drawer stays full-width).
+ */
+@media (min-width: 1024px) {
+	.rail-circle {
+		width: 100%;
+		min-height: 3rem;
+		border-radius: 9999px;
+	}
+	/* Collapsed icons keep their full specified size (22px nav, 24px toggle). */
+	/*
+	 * daisyUI stretches menu rows 12px past the content box (full-bleed
+	 * hover style). In the 80px rail that breaks circles and gutters, so
+	 * constrain rows to the content box when collapsed. Unlayered to win.
+	 */
+	aside.rail-collapsed > li {
+		width: 3rem;
+		margin-inline: 0;
+	}
+}
