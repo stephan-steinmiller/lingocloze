@@ -223,7 +223,17 @@
 	}
 
 	function onKey(e: KeyboardEvent): void {
-		if (e.key === 'Enter' && !revealed) check();
+		if (e.key === 'Enter' && !revealed) void check();
+	}
+
+	/**
+	 * Admit defeat without typing: counts as a miss (requeued like a wrong
+	 * answer) and skips the AI judge entirely — no point grading randomness.
+	 */
+	function dontKnow(): void {
+		if (!card || revealed || checking) return;
+		mistakes = { ...mistakes, [card.id]: (mistakes[card.id] ?? 0) + 1 };
+		revealed = true;
 	}
 
 	/**
@@ -428,6 +438,14 @@
 						{:else}
 							Check ↵
 						{/if}
+					</button>
+					<button
+						class="btn btn-ghost"
+						disabled={checking}
+						onclick={dontKnow}
+						title="Reveal the answer as a miss, without guessing"
+					>
+						I don't know
 					</button>
 				{:else if wasCorrect}
 					<div class="grid w-full grid-cols-3 gap-2">
