@@ -191,3 +191,5 @@
 </div>
 
 <a href={resolve('/')} class="btn btn-ghost">← Back home</a>
+
+<p class="mt-6 text-center font-mono text-xs opacity-40">build {__BUILD_ID__}</p>

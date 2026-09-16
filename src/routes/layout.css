@@ -73,8 +73,12 @@ body {
 	.rail-circle {
 		width: 100%;
 		min-height: 3rem;
+		/* 13+22+13 = 48: content exactly fills the circle, so the icon is
+		   optically centered with zero slack (daisyUI's 12px leaves 2px). */
+		padding-inline: 13px;
 		border-radius: 9999px;
 	}
+}
 	/* Collapsed icons keep their full specified size (22px nav, 24px toggle). */
 	/*
 	 * daisyUI stretches menu rows 12px past the content box (full-bleed

@@ -1,10 +1,20 @@
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';
+import { execSync } from 'node:child_process';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-auto';
 import { sveltekit } from '@sveltejs/kit/vite';
 
+function buildId(): string {
+	try {
+		return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim() || 'nogit';
+	} catch {
+		return 'nogit';
+	}
+}
+
 export default defineConfig({
+	define: { __BUILD_ID__: JSON.stringify(buildId()) },
 	// @hugeicons/svelte ships raw .svelte files: force them through vite's
 	// transform pipeline instead of node's native ESM loader (which rejects
 	// .svelte and breaks dev SSR).

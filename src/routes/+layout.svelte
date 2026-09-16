@@ -12,6 +12,7 @@
 		Layers01Icon,
 		Menu01Icon,
 		Settings03Icon,
+		StarIcon,
 		SwatchBookIcon
 	} from '@hugeicons/core-free-icons';
 	import favicon from '$lib/assets/favicon.svg';
@@ -118,9 +119,9 @@
 				>
 					<span class="lg:hidden">lingocloze<span class="text-primary">✦</span></span>
 					{#if collapsed}
-						<span class="hidden lg:inline" title="lingocloze"
-							><span class="text-primary">✦</span></span
-						>
+						<span class="hidden lg:inline-flex" title="lingocloze">
+							<HugeiconsIcon icon={StarIcon} size={22} class="text-primary" />
+						</span>
 					{:else}
 						<span
 							class="hidden overflow-hidden whitespace-nowrap transition-all duration-300 lg:inline-block lg:max-w-40 lg:opacity-100"

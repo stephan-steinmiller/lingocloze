@@ -8,6 +8,9 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
+
+	/** Short git hash baked at build/dev start — shown in Settings to verify versions. */
+	const __BUILD_ID__: string;
 }
 
 export {};
