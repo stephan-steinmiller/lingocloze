@@ -4,12 +4,6 @@
 	import { getLanguages } from '$lib/db/database';
 	import { getActiveLanguageId, setActiveLanguageId } from '$lib/stores/app.svelte';
 
-	interface Props {
-		compact?: boolean;
-	}
-
-	let { compact = false }: Props = $props();
-
 	let languages = $state(getLanguages());
 	let activeId = $state(getActiveLanguageId());
 
@@ -30,12 +24,10 @@
 </script>
 
 {#if languages.length === 0}
-	<a href={resolve('/onboarding')} class="btn btn-primary {compact ? 'btn-sm' : ''}">
-		+ Add your first language
-	</a>
+	<a href={resolve('/onboarding')} class="btn btn-primary btn-lg"> + Add your first language </a>
 {:else}
 	<select
-		class="select max-w-full {compact ? 'select-sm' : ''}"
+		class="select select-lg max-w-full"
 		value={activeId ?? ''}
 		onchange={pick}
 		aria-label="Active language"
