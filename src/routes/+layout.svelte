@@ -8,9 +8,8 @@
 		ArrowRightDoubleIcon,
 		BookOpen01Icon,
 		Cards01Icon,
-		Home05Icon,
+		Home01Icon,
 		Layers01Icon,
-		Menu01Icon,
 		Settings03Icon,
 		StarIcon,
 		SwatchBookIcon
