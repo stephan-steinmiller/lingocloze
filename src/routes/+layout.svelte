@@ -174,13 +174,9 @@
 				</li>
 			{/each}
 			<li class="hidden lg:block" title={collapsed ? 'Expand sidebar' : 'Collapse to icons'}>
-				<a
-					href="#sidebar-toggle"
-					onclick={(e) => {
-						e.preventDefault();
-						toggleSidebar();
-					}}
-					class="side-item text-base {collapsed ? 'rail-circle' : ''}"
+				<button
+					onclick={toggleSidebar}
+					class="side-item w-full text-base {collapsed ? 'rail-circle' : ''}"
 					aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar to icons'}
 				>
 					{#key collapsed}
@@ -192,7 +188,7 @@
 					<span class={collapsed ? 'lg:hidden' : ''}>
 						{collapsed ? 'Expand' : 'Collapse'}
 					</span>
-				</a>
+				</button>
 			</li>
 			{#if settingsNav}
 				<li class="mt-auto" title={collapsed ? settingsNav.label : undefined}>

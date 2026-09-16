@@ -198,6 +198,16 @@ async function proxyFetch(input: string | URL | Request, init?: RequestInit): Pr
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({ url, headers, body })
+	}).then((res) => {
+		const contentType = res.headers.get('content-type') ?? '';
+		if (!contentType.includes('application/json')) {
+			// Static hosts (no server routes) answer with the SPA fallback page.
+			throw new Error(
+				'AI proxy unreachable: this hosting has no server routes. ' +
+					'Use OpenAI/Anthropic/Google keys directly, or run the dev server for gated providers (Zen/Go).'
+			);
+		}
+		return res;
 	});
 }
 
