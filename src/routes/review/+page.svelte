@@ -330,13 +330,11 @@
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
 	<h1 class="text-2xl font-bold">Review {deckName ? `· ${deckName}` : ''}</h1>
 	<div class="flex items-center gap-3">
-		<label class="flex cursor-pointer items-center gap-1 text-xs opacity-70" title="Show sentence translations while answering">
-			<input
-				type="checkbox"
-				class="toggle toggle-xs"
-				checked={gentle}
-				onchange={toggleGentle}
-			/>
+		<label
+			class="flex cursor-pointer items-center gap-2 text-sm opacity-80"
+			title="Show sentence translations while answering"
+		>
+			<input type="checkbox" class="toggle" checked={gentle} onchange={toggleGentle} />
 			translations
 		</label>
 		<LanguageSelect />
