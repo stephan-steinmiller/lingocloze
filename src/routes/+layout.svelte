@@ -46,13 +46,17 @@
 	});
 
 	const nav = [
-		{ href: '/', label: 'Home', icon: Home05Icon },
+		{ href: '/', label: 'Home', icon: Home01Icon },
 		{ href: '/review', label: 'Review', icon: Cards01Icon },
 		{ href: '/decks', label: 'Decks', icon: Layers01Icon },
 		{ href: '/stories', label: 'Stories', icon: BookOpen01Icon },
 		{ href: '/words', label: 'Words', icon: SwatchBookIcon },
 		{ href: '/settings', label: 'Settings', icon: Settings03Icon }
 	];
+	// Sidebar order: main destinations up top, collapse toggle below Words,
+	// Settings pinned to the bottom. (The mobile dock keeps all six in order.)
+	const mainNav = nav.filter((i) => i.href !== '/settings');
+	const settingsNav = nav.find((i) => i.href === '/settings');
 
 	function isActive(href: string): boolean {
 		const path = page.url.pathname;
@@ -73,7 +77,7 @@
 		<div class="navbar sticky top-0 z-30 bg-base-100 shadow-sm lg:hidden">
 			<div class="flex-1">
 				<a href={resolve('/')} class="btn btn-ghost text-xl"
-					>lingocloze<span class="text-primary">✦</span></a
+					>lingocloze{' '}<span class="text-primary">✦</span></a
 				>
 			</div>
 			<div class="flex-none pr-2">
@@ -117,7 +121,7 @@
 					title="lingocloze home"
 					class="side-item text-xl font-bold {collapsed ? 'rail-circle' : ''}"
 				>
-					<span class="lg:hidden">lingocloze<span class="text-primary">✦</span></span>
+					<span class="lg:hidden">lingocloze{' '}<span class="text-primary">✦</span></span>
 					{#if collapsed}
 						<span class="hidden lg:inline-flex" title="lingocloze">
 							<HugeiconsIcon icon={StarIcon} size={22} class="text-primary" />
@@ -125,11 +129,23 @@
 					{:else}
 						<span
 							class="hidden overflow-hidden whitespace-nowrap transition-all duration-300 lg:inline-block lg:max-w-40 lg:opacity-100"
-							>lingocloze<span class="text-primary">✦</span></span
+							>lingocloze{' '}<span class="text-primary">✦</span></span
 						>
 					{/if}
 				</a>
 			</li>
+			{#each mainNav as item (item.href)}
+				<li title={collapsed ? item.label : undefined}>
+					<a
+						href={item.href}
+						class="side-item text-base {collapsed ? 'rail-circle' : ''}"
+						class:menu-active={isActive(item.href)}
+					>
+						<HugeiconsIcon icon={item.icon} size={22} />
+						<span class={collapsed ? 'lg:hidden' : ''}>{item.label}</span>
+					</a>
+				</li>
+			{/each}
 			<li class="hidden lg:block" title={collapsed ? 'Expand sidebar' : 'Collapse to icons'}>
 				<a
 					href="#sidebar-toggle"
@@ -151,19 +167,19 @@
 					</span>
 				</a>
 			</li>
-			{#each nav as item (item.href)}
-				<li title={collapsed ? item.label : undefined}>
+			{#if settingsNav}
+				<li class="mt-auto" title={collapsed ? settingsNav.label : undefined}>
 					<a
-						href={item.href}
+						href={settingsNav.href}
 						class="side-item text-base {collapsed ? 'rail-circle' : ''}"
-						class:menu-active={isActive(item.href)}
+						class:menu-active={isActive(settingsNav.href)}
 					>
-						<HugeiconsIcon icon={item.icon} size={22} />
-						<span class={collapsed ? 'lg:hidden' : ''}>{item.label}</span>
+						<HugeiconsIcon icon={settingsNav.icon} size={22} />
+						<span class={collapsed ? 'lg:hidden' : ''}>{settingsNav.label}</span>
 					</a>
 				</li>
-			{/each}
-			<div class="mt-auto px-2 pt-4">
+			{/if}
+			<div class="px-2 pt-2">
 				<JobIndicator />
 			</div>
 		</aside>
