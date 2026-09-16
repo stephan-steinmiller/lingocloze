@@ -67,13 +67,9 @@
 <div class="drawer min-h-screen bg-base-200 lg:drawer-open">
 	<input id="nav-drawer" type="checkbox" class="drawer-toggle" />
 	<div class="drawer-content flex flex-col">
-		<!-- Top bar (mobile) -->
+		<!-- Top bar (mobile): brand + job status. No drawer toggle — mobile
+			navigates via the bottom dock, the sidebar is desktop-only. -->
 		<div class="navbar sticky top-0 z-30 bg-base-100 shadow-sm lg:hidden">
-			<div class="flex-none">
-				<label for="nav-drawer" class="btn btn-square btn-ghost" aria-label="Open menu">
-					<HugeiconsIcon icon={Menu01Icon} size={22} />
-				</label>
-			</div>
 			<div class="flex-1">
 				<a href={resolve('/')} class="btn btn-ghost text-xl"
 					>lingocloze<span class="text-primary">✦</span></a
@@ -95,9 +91,9 @@
 			{/if}
 		</main>
 
-		<!-- Bottom nav (mobile) -->
+		<!-- Bottom dock (mobile): all six destinations, no drawer needed. -->
 		<nav class="dock lg:hidden">
-			{#each nav.slice(0, 5) as item (item.href)}
+			{#each nav as item (item.href)}
 				<a href={item.href} class:dock-active={isActive(item.href)} title={item.label}>
 					<HugeiconsIcon icon={item.icon} size={22} />
 					<span class="dock-label">{item.label}</span>

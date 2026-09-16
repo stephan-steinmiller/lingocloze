@@ -6,14 +6,11 @@
 	import {
 		Alert02Icon,
 		AnalyticsUpIcon,
-		BookOpen01Icon,
 		Cards01Icon,
 		CheckmarkCircle02Icon,
 		CrownIcon,
 		Key01Icon,
-		Layers01Icon,
-		SproutIcon,
-		SwatchBookIcon
+		SproutIcon
 	} from '@hugeicons/core-free-icons';
 	import LanguageSelect from '$lib/components/LanguageSelect.svelte';
 	import { getActiveLanguageId, getDbRevision, touchDb } from '$lib/stores/app.svelte';
@@ -237,24 +234,10 @@
 			</div>
 		</div>
 
-		<div class="mb-6 grid gap-3 sm:grid-cols-2">
-			<a
-				href={resolve('/review')}
-				class="btn btn-lg btn-primary {due === 0 ? 'btn-disabled' : ''}"
-				aria-disabled={due === 0}
-			>
-				<HugeiconsIcon icon={Cards01Icon} size={24} /> Review {due > 0
-					? `(${due})`
-					: '— all clear!'}
-			</a>
-			<a href={resolve('/decks')} class="btn btn-outline btn-lg">
-				<HugeiconsIcon icon={Layers01Icon} size={24} /> New cloze deck
-			</a>
-			<a href={resolve('/stories')} class="btn btn-outline btn-lg">
-				<HugeiconsIcon icon={BookOpen01Icon} size={24} /> Story mode
-			</a>
-			<a href={resolve('/words')} class="btn btn-outline btn-lg">
-				<HugeiconsIcon icon={SwatchBookIcon} size={24} /> Word database
+		<div class="mb-6">
+			<a href={resolve('/review')} class="btn btn-lg btn-primary w-full">
+				<HugeiconsIcon icon={Cards01Icon} size={24} />
+				{due > 0 ? `Review now (${due} due)` : 'All clear — nothing due!'}
 			</a>
 		</div>
 
