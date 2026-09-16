@@ -9,6 +9,13 @@ html {
 	scroll-behavior: smooth;
 }
 
+/* Bolder icon strokes everywhere (HugeIcons default 1.5 renders thin at
+   small sizes; 2 matches the classic Lucide-like weight). Presentation
+   attributes always lose to CSS, so no per-icon props needed. */
+svg :is(path, circle, ellipse, line, polyline, polygon, rect) {
+	stroke-width: 2;
+}
+
 body {
 	min-height: 100vh;
 }

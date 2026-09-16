@@ -541,8 +541,9 @@
 	</div>
 	<p class="mt-3 hidden text-center text-xs opacity-50 sm:block">
 		Keys: <kbd class="kbd kbd-xs">Enter</kbd> check · <kbd class="kbd kbd-xs">H</kbd> hint ·
-		<kbd class="kbd kbd-xs">I</kbd> skip · <kbd class="kbd kbd-xs">Space</kbd> focus ·
-		<kbd class="kbd kbd-xs">1</kbd><kbd class="kbd kbd-xs">2</kbd><kbd class="kbd kbd-xs">3</kbd> grade ·
-		<kbd class="kbd kbd-xs">R</kbd> retry · <kbd class="kbd kbd-xs">Esc</kbd> unfocus
+		<kbd class="kbd kbd-xs">I</kbd> skip · <kbd class="kbd kbd-xs">1</kbd
+		><kbd class="kbd kbd-xs">2</kbd><kbd class="kbd kbd-xs">3</kbd> grade ·
+		<kbd class="kbd kbd-xs">R</kbd> retry · <kbd class="kbd kbd-xs">Space</kbd> focus ·
+		<kbd class="kbd kbd-xs">Esc</kbd> unfocus
 	</p>
 {/if}
