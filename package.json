@@ -16,6 +16,7 @@
     "test": "npm run test:unit -- --run"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
     "@eslint/js": "^10.0.1",
     "@inlang/paraglide-js": "^2.18.2",
     "@sveltejs/adapter-auto": "^7.0.1",
@@ -45,7 +46,9 @@
     "@ai-sdk/openai": "^4.0.66",
     "@ai-sdk/openai-compatible": "^3.0.48",
     "@capacitor-community/sqlite": "^8.1.1",
+    "@capacitor/android": "^8.5.2",
     "@capacitor/core": "^8.5.2",
+    "@capgo/capacitor-updater": "^10.0.0",
     "@hugeicons/core-free-icons": "^4.3.2",
     "@hugeicons/svelte": "^1.1.5",
     "@supabase/supabase-js": "^2.116.0",

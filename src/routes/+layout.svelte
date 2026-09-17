@@ -50,6 +50,16 @@
 		// Auth first (local session read), then the database.
 		await initAuth();
 		await initNativeDatabase();
+		// Tell Capgo OTA the bundled web app booted fine (native only).
+		try {
+			const { Capacitor } = await import('@capacitor/core');
+			if (Capacitor.isNativePlatform()) {
+				const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
+				await CapacitorUpdater.notifyAppReady();
+			}
+		} catch {
+			/* updater absent or web build — ignore */
+		}
 		dbReady = true;
 		reloadLanguages();
 	});
