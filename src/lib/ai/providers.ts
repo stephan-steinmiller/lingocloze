@@ -1,8 +1,20 @@
 import type { LanguageModel } from 'ai';
+import { Capacitor } from '@capacitor/core';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+
+const BROWSER_UA =
+	'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
+
+function newSessionId(): string {
+	try {
+		return crypto.randomUUID();
+	} catch {
+		return `sess-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+	}
+}
 
 export type AIProvider = 'openai' | 'anthropic' | 'google' | 'compatible' | 'opencode-go';
 
@@ -167,14 +179,69 @@ export function hasApiKey(s: BYOKSettings): boolean {
 }
 
 /**
+ * Native HTTP fetch for Capacitor shells: requests go through the native
+ * layer, which is not subject to CORS — so gated gateways (Zen/Go) work on
+ * device with no proxy at all. Mirrors the header extras the server proxy
+ * would otherwise inject (browser UA, x-opencode-session).
+ */
+async function nativeDirectFetch(input: string | URL | Request, init?: RequestInit): Promise<Response> {
+	const { CapacitorHttp } = await import('@capacitor/core');
+	const url = String(typeof input === 'string' || input instanceof URL ? input : input.url);
+	const headers: Record<string, string> = {};
+	if (typeof input === 'string' || input instanceof URL) {
+		if (init?.headers) {
+			for (const [k, v] of new Headers(init.headers).entries()) headers[k.toLowerCase()] = v;
+		}
+	} else {
+		input.headers.forEach((v, k) => {
+			headers[k.toLowerCase()] = v;
+		});
+	}
+	let hostname = '';
+	try {
+		hostname = new URL(url).hostname.toLowerCase();
+	} catch {
+		/* leave empty */
+	}
+	if (hostname === 'opencode.ai') {
+		headers['user-agent'] ??= BROWSER_UA;
+		headers['x-opencode-session'] ??= newSessionId();
+	}
+	const rawBody =
+		typeof input === 'string' || input instanceof URL ? init?.body : await input.text();
+	const res = await CapacitorHttp.request({
+		url,
+		method: init?.method ?? 'POST',
+		headers,
+		data: typeof rawBody === 'string' ? rawBody : undefined
+	});
+	const text = typeof res.data === 'string' ? res.data : JSON.stringify(res.data ?? '');
+	return new Response(text, {
+		status: res.status,
+		headers: { 'content-type': 'application/json' }
+	});
+}
+
+/**
  * fetch wrapper that routes OpenAI-compatible calls through a same-origin
  * /api/zen proxy — or a custom CORS proxy URL (Cloudflare worker) on static
  * hosting. Fixes gateways without CORS headers and injects required extras
  * like x-opencode-session.
+ *
+ * On Capacitor native shells WITHOUT an explicit proxy URL, calls go direct
+ * through the native HTTP layer instead (no CORS there, no proxy needed).
  */
 function makeProxyFetch(proxyUrl?: string): typeof fetch {
-	const endpoint = proxyUrl?.trim() ? proxyUrl.trim() : '/api/zen';
+	const explicit = proxyUrl?.trim() ? proxyUrl.trim() : null;
 	return (async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+	if (!explicit) {
+		try {
+			if (Capacitor.isNativePlatform()) return await nativeDirectFetch(input, init);
+		} catch {
+			/* fall through to the proxy path */
+		}
+	}
+	const endpoint = explicit ?? '/api/zen';
 	let url: string;
 	let headers: Record<string, string> = {};
 	let body: unknown;
