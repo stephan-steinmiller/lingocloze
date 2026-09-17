@@ -8,7 +8,7 @@
 		ArrowRightDoubleIcon,
 		BookOpen01Icon,
 		Cards01Icon,
-		Home01Icon,
+		Home05Icon,
 		Layers01Icon,
 		Login01Icon,
 		Logout01Icon,
@@ -73,7 +73,7 @@
 	}
 
 	const nav = [
-		{ href: '/', label: 'Home', icon: Home01Icon },
+		{ href: '/', label: 'Home', icon: Home05Icon },
 		{ href: '/review', label: 'Review', icon: Cards01Icon },
 		{ href: '/decks', label: 'Decks', icon: Layers01Icon },
 		{ href: '/stories', label: 'Stories', icon: BookOpen01Icon },
@@ -190,19 +190,7 @@
 					</span>
 				</button>
 			</li>
-			{#if settingsNav}
-				<li class="mt-auto" title={collapsed ? settingsNav.label : undefined}>
-					<a
-						href={settingsNav.href}
-						class="side-item text-base {collapsed ? 'rail-circle' : ''}"
-						class:menu-active={isActive(settingsNav.href)}
-					>
-						<HugeiconsIcon icon={settingsNav.icon} size={22} />
-						<span class={collapsed ? 'lg:hidden' : ''}>{settingsNav.label}</span>
-					</a>
-				</li>
-			{/if}
-			<div class="px-2 pt-2">
+			<div class="px-2">
 				{#if user}
 					<div class="mb-2 flex items-center gap-2 {collapsed ? 'lg:justify-center' : ''}">
 						<span
@@ -233,6 +221,20 @@
 						<span class={collapsed ? 'lg:hidden' : ''}>Log in</span>
 					</a>
 				{/if}
+			</div>
+			{#if settingsNav}
+				<li class="mt-auto" title={collapsed ? settingsNav.label : undefined}>
+					<a
+						href={settingsNav.href}
+						class="side-item text-base {collapsed ? 'rail-circle' : ''}"
+						class:menu-active={isActive(settingsNav.href)}
+					>
+						<HugeiconsIcon icon={settingsNav.icon} size={22} />
+						<span class={collapsed ? 'lg:hidden' : ''}>{settingsNav.label}</span>
+					</a>
+				</li>
+			{/if}
+			<div class="px-2 pt-2">
 				<JobIndicator />
 			</div>
 		</aside>
