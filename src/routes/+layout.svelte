@@ -200,19 +200,7 @@
 					</span>
 				</button>
 			</li>
-			{#if settingsNav}
-				<li class="mt-auto" title={collapsed ? settingsNav.label : undefined}>
-					<a
-						href={settingsNav.href}
-						class="side-item text-base {collapsed ? 'rail-circle' : ''}"
-						class:menu-active={isActive(settingsNav.href)}
-					>
-						<HugeiconsIcon icon={settingsNav.icon} size={22} />
-						<span class={collapsed ? 'lg:hidden' : ''}>{settingsNav.label}</span>
-					</a>
-				</li>
-			{/if}
-			<div class="px-2 pt-2">
+			<div class="px-2">
 				{#if user}
 					<div class="mb-2 flex items-center gap-2 {collapsed ? 'lg:justify-center' : ''}">
 						<span
@@ -243,6 +231,20 @@
 						<span class={collapsed ? 'lg:hidden' : ''}>Log in</span>
 					</a>
 				{/if}
+			</div>
+			{#if settingsNav}
+				<li class="mt-auto" title={collapsed ? settingsNav.label : undefined}>
+					<a
+						href={settingsNav.href}
+						class="side-item text-base {collapsed ? 'rail-circle' : ''}"
+						class:menu-active={isActive(settingsNav.href)}
+					>
+						<HugeiconsIcon icon={settingsNav.icon} size={22} />
+						<span class={collapsed ? 'lg:hidden' : ''}>{settingsNav.label}</span>
+					</a>
+				</li>
+			{/if}
+			<div class="px-2 pt-2">
 				<JobIndicator />
 			</div>
 		</aside>
