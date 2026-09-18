@@ -200,7 +200,7 @@
 					</span>
 				</button>
 			</li>
-			<div class="px-2">
+			<div class="mt-auto px-2">
 				{#if user}
 					<div class="mb-2 flex items-center gap-2 {collapsed ? 'lg:justify-center' : ''}">
 						<span
@@ -233,7 +233,7 @@
 				{/if}
 			</div>
 			{#if settingsNav}
-				<li class="mt-auto" title={collapsed ? settingsNav.label : undefined}>
+				<li title={collapsed ? settingsNav.label : undefined}>
 					<a
 						href={settingsNav.href}
 						class="side-item text-base {collapsed ? 'rail-circle' : ''}"
