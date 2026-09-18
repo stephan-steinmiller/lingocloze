@@ -48,7 +48,7 @@
     "@capacitor-community/sqlite": "^8.1.1",
     "@capacitor/android": "^8.5.2",
     "@capacitor/core": "^8.5.2",
-    "@capgo/capacitor-updater": "^10.0.0",
+    "@capgo/capacitor-updater": "^8.51.19",
     "@hugeicons/core-free-icons": "^4.3.2",
     "@hugeicons/svelte": "^1.1.5",
     "@supabase/supabase-js": "^2.116.0",

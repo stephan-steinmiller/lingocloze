@@ -6,4 +6,4 @@ include ':capacitor-community-sqlite'
 project(':capacitor-community-sqlite').projectDir = new File('../node_modules/.store/@capacitor-community+sqlite@8.1.1_@capacitor+core@8.5.2/node_modules/@capacitor-community/sqlite/android')
 
 include ':capgo-capacitor-updater'
-project(':capgo-capacitor-updater').projectDir = new File('../../../../../../.cache/nub/pm/store/@capgo+capacitor-updater@10.0.0_@capacitor+core@8.5.2_-1cb5f216e14400cb/node_modules/@capgo/capacitor-updater/android')
+project(':capgo-capacitor-updater').projectDir = new File('../../../../../../.cache/nub/pm/store/@capgo+capacitor-updater@8.51.19_@capacitor+core@8.5.2_-290445fcb7015d7d/node_modules/@capgo/capacitor-updater/android')
