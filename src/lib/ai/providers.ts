@@ -38,6 +38,20 @@ const SETTINGS_KEY = 'ling_byok_v1';
 /** Base URL of the OpenCode Go subscription gateway (billed via subscription). */
 export const OPENCODE_GO_BASE_URL = 'https://opencode.ai/zen/go/v1';
 
+/**
+ * Default CORS proxy for Go: our Supabase Edge Function (same {url,headers,body}
+ * protocol as /api/zen). Baked from env at build time; explicit per-user proxy
+ * URLs still win when set.
+ */
+function defaultGoProxyUrl(): string | undefined {
+	try {
+		const base = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, '');
+		return base ? `${base}/functions/v1/zen-proxy` : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
 type GoFlavor = 'responses' | 'chat' | 'messages';
 
 /** Which Go endpoint each model lives on (see opencode.ai/docs/go#endpoints). */
@@ -318,13 +332,16 @@ export function getLanguageModel(s: BYOKSettings): LanguageModel {
 			// Subscription gateway: each model lives on a specific endpoint
 			// flavor (responses / chat / messages). Routed via the proxy so
 			// CORS-less Zen/Go endpoints and the x-opencode-session header work.
+			// Proxy default: our Supabase Edge Function (env-baked); a manual
+			// proxy URL in settings overrides it; dev server /api/zen otherwise.
 			const model = s.model || 'muse-spark-1.3-contributor';
 			const flavor = goFlavorFor(model);
+			const proxy = s.proxyUrl || defaultGoProxyUrl();
 			if (flavor === 'responses') {
 				const go = createOpenAI({
 					apiKey: s.apiKey.trim() || undefined,
 					baseURL: OPENCODE_GO_BASE_URL,
-					fetch: makeProxyFetch(s.proxyUrl)
+					fetch: makeProxyFetch(proxy)
 				});
 				return go.responses(model);
 			}
@@ -332,14 +349,14 @@ export function getLanguageModel(s: BYOKSettings): LanguageModel {
 				const claude = createAnthropic({
 					apiKey: s.apiKey.trim() || undefined,
 					baseURL: OPENCODE_GO_BASE_URL,
-					fetch: makeProxyFetch(s.proxyUrl)
+					fetch: makeProxyFetch(proxy)
 				});
 				return claude(model);
 			}
 			const go = createOpenAI({
 				apiKey: s.apiKey.trim() || undefined,
 				baseURL: OPENCODE_GO_BASE_URL,
-				fetch: makeProxyFetch(s.proxyUrl)
+				fetch: makeProxyFetch(proxy)
 			});
 			return go.chat(model);
 		}

@@ -176,8 +176,12 @@
 					spellcheck={false}
 				/>
 				<p class="mt-1 text-xs opacity-60">
-					Only needed where the app has no server route (e.g. surge.sh) for gateways
-					without CORS headers. See worker/ to self-host one free.
+					{#if settings.provider === 'opencode-go'}
+						Automatic: Supabase Edge Function. Override only to use your own proxy.
+					{:else}
+						Only needed where the app has no server route (e.g. surge.sh) for gateways
+						without CORS headers. See worker/ to self-host one free.
+					{/if}
 				</p>
 			</label>
 		{/if}
