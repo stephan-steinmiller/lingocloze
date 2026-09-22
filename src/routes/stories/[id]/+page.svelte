@@ -132,7 +132,8 @@
 				</div>
 				{#if submitted && q.explanation}
 					<p class="mt-2 flex items-center gap-1 text-xs opacity-70">
-						<HugeiconsIcon icon={Idea01Icon} size={14} /> {q.explanation}
+						<HugeiconsIcon icon={Idea01Icon} size={14} />
+						{q.explanation}
 					</p>
 				{/if}
 			</div>

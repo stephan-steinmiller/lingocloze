@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { onMount } from 'svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		GithubIcon,
@@ -11,6 +12,7 @@
 	} from '@hugeicons/core-free-icons';
 	import {
 		getUser,
+		handleAuthCallback,
 		isSupabaseConfigured,
 		sendOtp,
 		signInWithOAuth,
@@ -25,6 +27,25 @@
 	let busy = $state(false);
 	let error = $state('');
 	let user = $derived(getUser());
+
+	// Returning from a magic-link / OAuth redirect lands here (see
+	// emailRedirectTo in auth.svelte): exchange it for a session at once.
+	onMount(async () => {
+		busy = true;
+		try {
+			if (await handleAuthCallback()) {
+				touchDb();
+				await goto(resolve('/'));
+			}
+		} catch (err) {
+			error =
+				err instanceof Error
+					? err.message
+					: 'That sign-in link is invalid or expired. Request a new code.';
+		} finally {
+			busy = false;
+		}
+	});
 
 	async function send(): Promise<void> {
 		if (!email.includes('@')) {
@@ -93,7 +114,7 @@
 		<div class="card-body">
 			<p class="font-semibold">{user.email}</p>
 			<p class="text-sm opacity-60">Logged in. Progress is stored under this account.</p>
-			<div class="card-actions mt-2">
+			<div class="mt-2 card-actions">
 				<button class="btn btn-outline" onclick={logout}>
 					<HugeiconsIcon icon={Logout01Icon} size={18} /> Log out
 				</button>
@@ -107,7 +128,10 @@
 			<h2 class="card-title">
 				<HugeiconsIcon icon={Mail01Icon} size={22} /> Email code
 			</h2>
-			<p class="text-sm opacity-70">No password — we email you a 6-digit code.</p>
+			<p class="text-sm opacity-70">
+				No password — we email you a 6-digit code. If your email shows a sign-in link instead,
+				tapping it signs you in too.
+			</p>
 			<div class="mt-2 flex gap-2">
 				<input
 					class="input flex-1"
@@ -141,7 +165,10 @@
 	<div class="card bg-base-100 shadow-sm">
 		<div class="card-body">
 			<h2 class="card-title">Check {email}</h2>
-			<p class="text-sm opacity-70">Enter the 6-digit code (check spam too).</p>
+			<p class="text-sm opacity-70">
+				Enter the 6-digit code from the email body (check spam too) — or tap the sign-in link in
+				that same email.
+			</p>
 			<div class="mt-2 flex gap-2">
 				<input
 					class="input flex-1 text-center text-xl tracking-[0.5em]"
@@ -158,7 +185,7 @@
 				</button>
 			</div>
 			{#if error}<p class="mt-2 text-sm text-error">{error}</p>{/if}
-			<button class="btn btn-ghost btn-sm mt-2 self-start" onclick={() => (step = 'email')}>
+			<button class="btn mt-2 self-start btn-ghost btn-sm" onclick={() => (step = 'email')}>
 				← Use a different email
 			</button>
 		</div>

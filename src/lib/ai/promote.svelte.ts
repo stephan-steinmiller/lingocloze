@@ -1,4 +1,5 @@
 import { generateObject } from 'ai';
+import { SvelteSet } from 'svelte/reactivity';
 import { z } from 'zod';
 import { getLanguage, getReviewLogs, getWords, promoteLanguage } from '$lib/db/database';
 import { promotionEligibility, type ActflLevel } from '$lib/actfl';
@@ -27,7 +28,7 @@ export function clearPromotionNotice(): void {
 	notice = null;
 }
 
-const inFlight = new Set<string>();
+const inFlight = new SvelteSet<string>();
 const coolKey = (id: string) => `ling_promo_cool_${id}`;
 const COOLDOWN_MS = 7 * 24 * 3600 * 1000;
 
@@ -77,7 +78,14 @@ export async function maybePromote(languageId: string): Promise<void> {
 	}
 
 	inFlight.add(languageId);
-	notice = { languageId, from: lang.level, to: elig.next, kind: 'assessing', rationale: '', at: Date.now() };
+	notice = {
+		languageId,
+		from: lang.level,
+		to: elig.next,
+		kind: 'assessing',
+		rationale: '',
+		at: Date.now()
+	};
 	try {
 		const sample = getWords(languageId)
 			.filter((w) => w.proficiency >= 3)
@@ -95,14 +103,28 @@ Reply "promote" ONLY if this evidence clearly supports ${elig.next}-level abilit
 		});
 		if (object.decision === 'promote') {
 			promoteLanguage(languageId);
-			notice = { languageId, from: lang.level, to: elig.next, kind: 'promoted', rationale: object.rationale, at: Date.now() };
+			notice = {
+				languageId,
+				from: lang.level,
+				to: elig.next,
+				kind: 'promoted',
+				rationale: object.rationale,
+				at: Date.now()
+			};
 		} else {
 			try {
 				localStorage.setItem(coolKey(languageId), String(Date.now()));
 			} catch {
 				/* ignore */
 			}
-			notice = { languageId, from: lang.level, to: elig.next, kind: 'declined', rationale: object.rationale, at: Date.now() };
+			notice = {
+				languageId,
+				from: lang.level,
+				to: elig.next,
+				kind: 'declined',
+				rationale: object.rationale,
+				at: Date.now()
+			};
 		}
 	} catch {
 		// AI unreachable: honor the earned heuristic promotion instead of blocking it.

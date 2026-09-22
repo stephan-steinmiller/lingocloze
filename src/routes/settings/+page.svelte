@@ -2,7 +2,15 @@
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { FloppyDiskIcon, Key01Icon, ViewIcon, ViewOffIcon, CheckmarkCircle02Icon, UserCircleIcon, Logout01Icon } from '@hugeicons/core-free-icons';
+	import {
+		FloppyDiskIcon,
+		Key01Icon,
+		ViewIcon,
+		ViewOffIcon,
+		CheckmarkCircle02Icon,
+		UserCircleIcon,
+		Logout01Icon
+	} from '@hugeicons/core-free-icons';
 	import ThemeSelect from '$lib/components/ThemeSelect.svelte';
 	import { getUser, signOut } from '$lib/stores/auth.svelte';
 	import { touchDb } from '$lib/stores/app.svelte';
@@ -129,7 +137,7 @@
 		{#each PROVIDERS.filter((p) => p.id === settings.provider) as p (p.id)}
 			<p class="mb-3 text-sm opacity-70">
 				{p.description}
-				<a class="link" href={p.keyUrl} target="_blank" rel="noreferrer">Get a key →</a>
+				<a class="link" href={p.keyUrl} target="_blank" rel="noreferrer external">Get a key →</a>
 			</p>
 		{/each}
 
@@ -153,7 +161,7 @@
 		</label>
 
 		{#if settings.provider === 'compatible'}
-			<label class="fieldset mt-2 w-full max-w-md">
+			<label class="mt-2 fieldset w-full max-w-md">
 				<legend class="fieldset-legend">Base URL</legend>
 				<input
 					class="input"
@@ -165,7 +173,7 @@
 		{/if}
 
 		{#if settings.provider === 'compatible' || settings.provider === 'opencode-go'}
-			<label class="fieldset mt-2 w-full max-w-md">
+			<label class="mt-2 fieldset w-full max-w-md">
 				<legend class="fieldset-legend">CORS proxy URL (optional)</legend>
 				<input
 					class="input"
@@ -179,14 +187,14 @@
 					{#if settings.provider === 'opencode-go'}
 						Automatic: Supabase Edge Function. Override only to use your own proxy.
 					{:else}
-						Only needed where the app has no server route (e.g. surge.sh) for gateways
-						without CORS headers. See worker/ to self-host one free.
+						Only needed where the app has no server route (e.g. surge.sh) for gateways without CORS
+						headers. See worker/ to self-host one free.
 					{/if}
 				</p>
 			</label>
 		{/if}
 
-		<label class="fieldset mt-2 w-full max-w-md">
+		<label class="mt-2 fieldset w-full max-w-md">
 			<legend class="fieldset-legend">API key</legend>
 			<div class="flex w-full gap-2">
 				<input

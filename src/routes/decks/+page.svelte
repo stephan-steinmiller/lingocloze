@@ -12,13 +12,7 @@
 	} from '@hugeicons/core-free-icons';
 	import LanguageSelect from '$lib/components/LanguageSelect.svelte';
 	import { TOPIC_SUGGESTIONS } from '$lib/db/languages';
-	import {
-		deleteDeck,
-		getCards,
-		getDecks,
-		getDueCards,
-		getLanguage
-	} from '$lib/db/database';
+	import { deleteDeck, getCards, getDecks, getDueCards, getLanguage } from '$lib/db/database';
 	import { dismissJob, getJobsFor, startClozeJob } from '$lib/stores/jobs.svelte';
 	import { getActiveLanguageId, getDbRevision, touchDb } from '$lib/stores/app.svelte';
 
@@ -70,7 +64,7 @@
 	}
 </script>
 
-<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
 	<h1 class="text-2xl font-bold">Cloze decks</h1>
 	<LanguageSelect />
 </div>
@@ -100,7 +94,7 @@
 				<label class="fieldset">
 					<legend class="fieldset-legend">…or your own topic</legend>
 					<input
-						class="input "
+						class="input"
 						placeholder="e.g. ordering coffee in Lisbon"
 						bind:value={customTopic}
 					/>
@@ -127,7 +121,7 @@
 	</div>
 
 	{#if jobs.length > 0}
-		<div class="grid gap-2 mb-4">
+		<div class="mb-4 grid gap-2">
 			{#each jobs as j (j.id)}
 				<div
 					class="card shadow-sm {j.status === 'error'
@@ -138,14 +132,15 @@
 				>
 					<div class="card-body flex-row items-center gap-3 px-4 py-3">
 						{#if j.status === 'running'}
-							<span class="loading loading-spinner loading-sm text-primary"></span>
+							<span class="loading loading-sm loading-spinner text-primary"></span>
 							<p class="flex-1 text-sm">
 								Generating {j.count} cards about “{j.topic}”… you can leave this page.
 							</p>
 						{:else if j.status === 'done'}
 							<HugeiconsIcon icon={CheckmarkCircle02Icon} size={20} class="text-success" />
 							<p class="flex-1 text-sm">
-								{j.count} cards about “{j.topic}” ready{#if j.demo} (demo content){/if}.
+								{j.count} cards about “{j.topic}” ready{#if j.demo}
+									(demo content){/if}.
 							</p>
 							{#if j.deckId}
 								<a href={resolve(`/review?deck=${j.deckId}`)} class="btn btn-primary btn-sm"
@@ -186,7 +181,7 @@
 						<a href={resolve(`/review?deck=${d.id}`)} class="btn btn-primary btn-sm">Review</a>
 						<a href={resolve(`/decks/${d.id}`)} class="btn btn-ghost btn-sm">Details</a>
 						<button
-							class="btn btn-sm btn-ghost text-error"
+							class="btn btn-ghost text-error btn-sm"
 							onclick={() => remove(d.id)}
 							aria-label="Delete deck"
 						>

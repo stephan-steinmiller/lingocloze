@@ -15,12 +15,7 @@
 </script>
 
 <label class="flex items-center gap-2">
-	<select
-		class="select max-w-full flex-1"
-		value={current}
-		onchange={pick}
-		aria-label="Color theme"
-	>
+	<select class="select max-w-full flex-1" value={current} onchange={pick} aria-label="Color theme">
 		{#each THEMES as t (t)}
 			<option value={t}>{t}</option>
 		{/each}

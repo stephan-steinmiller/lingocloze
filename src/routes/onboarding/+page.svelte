@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { animate } from 'motion';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Alert02Icon, Idea01Icon } from '@hugeicons/core-free-icons';
@@ -49,7 +50,7 @@
 	}
 
 	function toggle(word: string): void {
-		const next = new Set(knownSet);
+		const next = new SvelteSet(knownSet);
 		if (next.has(word)) next.delete(word);
 		else next.add(word);
 		knownSet = next;
@@ -58,7 +59,7 @@
 	function toggleTier(tier: number): void {
 		const tierWords = checklist.filter((w) => w.tier === tier).map((w) => w.text);
 		const allKnown = tierWords.every((w) => knownSet.has(w));
-		const next = new Set(knownSet);
+		const next = new SvelteSet(knownSet);
 		for (const w of tierWords) {
 			if (allKnown) next.delete(w);
 			else next.add(w);
@@ -169,7 +170,9 @@
 		<div role="alert" class="mb-4 alert alert-error">
 			<HugeiconsIcon icon={Alert02Icon} size={20} /><span>{loadError}</span>
 		</div>
-		<button class="btn btn-primary" onclick={startBeginner}>Start as complete beginner (Novice Low)</button>
+		<button class="btn btn-primary" onclick={startBeginner}
+			>Start as complete beginner (Novice Low)</button
+		>
 	{:else}
 		{#if usedDemoList}
 			<div role="alert" class="mb-3 alert text-sm alert-info">

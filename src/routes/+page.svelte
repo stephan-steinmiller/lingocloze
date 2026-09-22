@@ -128,7 +128,7 @@
 		{/if}
 
 		{#if jobs.length > 0}
-			<div class="grid gap-2 mb-4">
+			<div class="mb-4 grid gap-2">
 				{#each jobs as j (j.id)}
 					<div
 						class="card shadow-sm {j.status === 'error'
@@ -139,10 +139,9 @@
 					>
 						<div class="card-body flex-row items-center gap-3 px-4 py-3">
 							{#if j.status === 'running'}
-								<span class="loading loading-spinner loading-sm text-primary"></span>
+								<span class="loading loading-sm loading-spinner text-primary"></span>
 								<p class="flex-1 text-sm">
-									{j.kind === 'story' ? 'Writing' : `Generating ${j.count} cards`} · “{j.topic}”
-									({j.languageName})…
+									{j.kind === 'story' ? 'Writing' : `Generating ${j.count} cards`} · “{j.topic}” ({j.languageName})…
 								</p>
 							{:else if j.status === 'done'}
 								<HugeiconsIcon icon={CheckmarkCircle02Icon} size={20} class="text-success" />
@@ -160,11 +159,15 @@
 										>Read now</a
 									>
 								{/if}
-								<button class="btn btn-ghost btn-sm" onclick={() => dismissJob(j.id)}>Dismiss</button>
+								<button class="btn btn-ghost btn-sm" onclick={() => dismissJob(j.id)}
+									>Dismiss</button
+								>
 							{:else}
 								<HugeiconsIcon icon={Alert02Icon} size={20} class="text-error" />
 								<p class="flex-1 text-sm">{j.error}</p>
-								<button class="btn btn-ghost btn-sm" onclick={() => dismissJob(j.id)}>Dismiss</button>
+								<button class="btn btn-ghost btn-sm" onclick={() => dismissJob(j.id)}
+									>Dismiss</button
+								>
 							{/if}
 						</div>
 					</div>
@@ -210,10 +213,11 @@
 					<div class="mt-2">
 						<p class="text-sm">
 							Next: <span class="font-semibold">{promo.next}</span> — {promo.haveWords}/{promo.needWords}
-							known words · {Math.round(promo.recall * 100)}% recall ({promo.reviewCount}/20+ reviews)
+							known words · {Math.round(promo.recall * 100)}% recall ({promo.reviewCount}/20+
+							reviews)
 						</p>
 						<progress
-							class="progress progress-primary mt-1 w-full"
+							class="progress mt-1 w-full progress-primary"
 							value={Math.min(promo.haveWords, promo.needWords)}
 							max={promo.needWords}
 						></progress>
@@ -235,7 +239,7 @@
 		</div>
 
 		<div class="mb-6">
-			<a href={resolve('/review')} class="btn btn-lg btn-primary w-full">
+			<a href={resolve('/review')} class="btn w-full btn-lg btn-primary">
 				<HugeiconsIcon icon={Cards01Icon} size={24} />
 				{due > 0 ? `Review now (${due} due)` : 'All clear — nothing due!'}
 			</a>

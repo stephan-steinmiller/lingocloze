@@ -68,11 +68,7 @@
 	</p>
 
 	<div class="mb-3 flex flex-col gap-2 sm:flex-row">
-		<input
-			class="input flex-1"
-			placeholder="Search words or translations…"
-			bind:value={query}
-		/>
+		<input class="input flex-1" placeholder="Search words or translations…" bind:value={query} />
 		<div class="flex flex-wrap gap-1">
 			{#each [['all', 'All'], ['known', 'Known'], ['learning', 'Learning'], ['new', 'New']] as [v, label] (v)}
 				<button
@@ -87,19 +83,11 @@
 		<div class="card-body flex-row flex-wrap items-end gap-2 px-4 py-3">
 			<label class="fieldset">
 				<legend class="fieldset-legend text-xs">Word ({lang.name})</legend>
-				<input
-					class="input input-sm"
-					bind:value={newWord}
-					placeholder="e.g. libro"
-				/>
+				<input class="input input-sm" bind:value={newWord} placeholder="e.g. libro" />
 			</label>
 			<label class="fieldset">
 				<legend class="fieldset-legend text-xs">Translation</legend>
-				<input
-					class="input input-sm"
-					bind:value={newTranslation}
-					placeholder="e.g. book"
-				/>
+				<input class="input input-sm" bind:value={newTranslation} placeholder="e.g. book" />
 			</label>
 			<div class="fieldset">
 				<div class="fieldset-legend text-xs" aria-hidden="true">&nbsp;</div>

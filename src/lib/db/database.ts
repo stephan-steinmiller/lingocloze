@@ -12,7 +12,14 @@ import type {
 	WordSource
 } from './types';
 import type { ActflLevel } from '$lib/actfl';
-import { actflAt, actflBand, actflIndex, actflToStoryLevel, isActflLevel, migrateCefrToActfl } from '$lib/actfl';
+import {
+	actflAt,
+	actflBand,
+	actflIndex,
+	actflToStoryLevel,
+	isActflLevel,
+	migrateCefrToActfl
+} from '$lib/actfl';
 import { getUser } from '$lib/stores/auth.svelte';
 
 const LEGACY_STORAGE_KEY = 'ling_db_v1';
@@ -45,9 +52,11 @@ export function migrateLegacyStore(userId: string): boolean {
 		const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
 		const targetRaw = localStorage.getItem(dbKeyFor(userId));
 		const legacy = legacyRaw ? (JSON.parse(legacyRaw) as DatabaseShape) : null;
-		const hasLegacyData = !!legacy && Array.isArray(legacy.languages) && legacy.languages.length > 0;
+		const hasLegacyData =
+			!!legacy && Array.isArray(legacy.languages) && legacy.languages.length > 0;
 		const target = targetRaw ? (JSON.parse(targetRaw) as DatabaseShape) : null;
-		const targetEmpty = !target || !Array.isArray(target.languages) || target.languages.length === 0;
+		const targetEmpty =
+			!target || !Array.isArray(target.languages) || target.languages.length === 0;
 		localStorage.setItem(`ling_migrated_${userId}`, '1');
 		if (!hasLegacyData || !targetEmpty || !legacy) return false;
 		localStorage.setItem(dbKeyFor(userId), JSON.stringify({ ...emptyDb(), ...legacy }));

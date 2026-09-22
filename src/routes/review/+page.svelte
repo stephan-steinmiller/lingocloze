@@ -16,7 +16,6 @@
 	} from '@hugeicons/core-free-icons';
 	import LanguageSelect from '$lib/components/LanguageSelect.svelte';
 	import {
-		getCards,
 		getDeck,
 		getDueCards,
 		getLanguage,
@@ -31,11 +30,7 @@
 	import { getActiveLanguageId, touchDb } from '$lib/stores/app.svelte';
 	import { loadSettings } from '$lib/ai/providers';
 	import { judgeAnswer } from '$lib/ai/judge';
-	import {
-		clearPromotionNotice,
-		getPromotionNotice,
-		maybePromote
-	} from '$lib/ai/promote.svelte';
+	import { clearPromotionNotice, getPromotionNotice, maybePromote } from '$lib/ai/promote.svelte';
 	import { updateLanguage } from '$lib/db/database';
 
 	let cardEl: HTMLElement | undefined = $state();
@@ -66,12 +61,10 @@
 	let sessionRetries = $state(0);
 	/** Wrong attempts per card id this session (drives requeue + struggle memory). */
 	let mistakes = $state<Record<string, number>>({});
-	let deckSize = $state(0);
 	const MAX_TRIES = 3;
 
 	function resetSession(): void {
 		cards = buildQueue();
-		deckSize = deckFilter ? getCards(deckFilter).length : cards.length;
 		index = 0;
 		typed = '';
 		revealed = false;
@@ -226,7 +219,8 @@
 		}
 	}
 
-	function preview(g: ReviewGrade): string {		if (!card) return '';
+	function preview(g: ReviewGrade): string {
+		if (!card) return '';
 		const res = reviewSrs(
 			{ easeFactor: card.easeFactor, interval: card.interval, repetitions: card.repetitions },
 			g,
@@ -251,7 +245,13 @@
 			// already means something (typing, buttons, links keep natives).
 			const t = e.target as HTMLElement | null;
 			const tag = t?.tagName;
-			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || tag === 'A') {
+			if (
+				tag === 'INPUT' ||
+				tag === 'TEXTAREA' ||
+				tag === 'SELECT' ||
+				tag === 'BUTTON' ||
+				tag === 'A'
+			) {
 				return;
 			}
 			e.preventDefault();
@@ -344,14 +344,14 @@
 {#if promo}
 	<div
 		role="alert"
-		class="alert mb-4 {promo.kind === 'promoted'
+		class="mb-4 alert {promo.kind === 'promoted'
 			? 'alert-success'
 			: promo.kind === 'assessing'
 				? 'alert-info'
 				: 'alert-warning'}"
 	>
 		{#if promo.kind === 'assessing'}
-			<span class="loading loading-spinner loading-sm"></span>
+			<span class="loading loading-sm loading-spinner"></span>
 			<span>AI is reviewing your progress for promotion to {promo.to}…</span>
 		{:else if promo.kind === 'promoted'}
 			<HugeiconsIcon icon={PartyIcon} size={20} />
@@ -459,7 +459,8 @@
 			{#if !revealed && gentle}
 				<div class="rounded-xl bg-info/10 p-3">
 					<p class="flex items-center gap-1 text-sm opacity-80">
-						<HugeiconsIcon icon={Globe02Icon} size={16} /> {card.translation}
+						<HugeiconsIcon icon={Globe02Icon} size={16} />
+						{card.translation}
 					</p>
 				</div>
 			{/if}
@@ -509,18 +510,18 @@
 				{:else if wasCorrect}
 					<div class="grid w-full grid-cols-3 gap-2">
 						<button class="btn btn-outline btn-warning" onclick={() => grade('hard')}>
-							Hard <kbd class="kbd kbd-xs">1</kbd><span
-								class="hidden text-xs opacity-60 sm:inline">{preview('hard')}</span
+							Hard <kbd class="kbd kbd-xs">1</kbd><span class="hidden text-xs opacity-60 sm:inline"
+								>{preview('hard')}</span
 							>
 						</button>
 						<button class="btn btn-outline btn-success" onclick={() => grade('fine')}>
-							Fine <kbd class="kbd kbd-xs">2</kbd><span
-								class="hidden text-xs opacity-60 sm:inline">{preview('fine')}</span
+							Fine <kbd class="kbd kbd-xs">2</kbd><span class="hidden text-xs opacity-60 sm:inline"
+								>{preview('fine')}</span
 							>
 						</button>
 						<button class="btn btn-outline btn-info" onclick={() => grade('easy')}>
-							Easy <kbd class="kbd kbd-xs">3</kbd><span
-								class="hidden text-xs opacity-60 sm:inline">{preview('easy')}</span
+							Easy <kbd class="kbd kbd-xs">3</kbd><span class="hidden text-xs opacity-60 sm:inline"
+								>{preview('easy')}</span
 							>
 						</button>
 					</div>
@@ -539,8 +540,9 @@
 	</div>
 	<p class="mt-3 hidden text-center text-xs opacity-50 sm:block">
 		Keys: <kbd class="kbd kbd-xs">Enter</kbd> check · <kbd class="kbd kbd-xs">H</kbd> hint ·
-		<kbd class="kbd kbd-xs">I</kbd> skip · <kbd class="kbd kbd-xs">1</kbd
-		><kbd class="kbd kbd-xs">2</kbd><kbd class="kbd kbd-xs">3</kbd> grade ·
+		<kbd class="kbd kbd-xs">I</kbd> skip · <kbd class="kbd kbd-xs">1</kbd><kbd class="kbd kbd-xs"
+			>2</kbd
+		><kbd class="kbd kbd-xs">3</kbd> grade ·
 		<kbd class="kbd kbd-xs">R</kbd> retry · <kbd class="kbd kbd-xs">Space</kbd> focus ·
 		<kbd class="kbd kbd-xs">Esc</kbd> unfocus
 	</p>

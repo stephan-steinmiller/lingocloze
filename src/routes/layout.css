@@ -32,8 +32,28 @@ body {
 	border-bottom-style: dashed;
 }
 
-/* Active mobile dock tab: primary-tinted pill like the sidebar. Unlayered so
-   it wins over daisyUI's dock styles; the default indicator bar is hidden. */
+/* Mobile dock tabs: daisyUI's dock padding is asymmetric (.5rem top, only
+   the safe-area inset at the bottom), so its content box — and anything
+   centered in it — sits low in the bar. Make the padding symmetric and shrink
+   each tab to its content, so the dock's align-items:center truly centers the
+   pill in the bar. Compact pill with even margins all around. The default
+   indicator bar is hidden. Unlayered so it wins over daisyUI's dock styles. */
+.dock {
+	padding-top: 0.5rem;
+	padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+}
+.dock a {
+	height: auto;
+	margin-bottom: 0;
+	padding-block: 0.375rem;
+}
+/* Tight label line box: the 11px labels carry a full 1.5 line-height, whose
+   empty descender space sits below text that has (almost) no descenders, so
+   the ink reads as riding high. 1.25 hugs the glyphs and optically centers
+   them under the icon. Applies to every tab, so all six stay aligned. */
+.dock .dock-label {
+	line-height: 1.25;
+}
 .dock a.dock-active {
 	background-color: color-mix(in oklab, var(--color-primary) 14%, transparent);
 	color: var(--color-primary);

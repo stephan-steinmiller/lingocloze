@@ -1,11 +1,4 @@
-import {
-	addCards,
-	createDeck,
-	getLanguage,
-	getWords,
-	saveStory,
-	uid
-} from '$lib/db/database';
+import { addCards, createDeck, getLanguage, getWords, saveStory, uid } from '$lib/db/database';
 import { generateClozeCards, generateStory } from '$lib/ai/generate';
 import { loadSettings } from '$lib/ai/providers';
 import { touchDb } from './app.svelte';
@@ -37,9 +30,7 @@ export function getJobs(): Job[] {
 }
 
 export function getJobsFor(kind: JobKind, languageId?: string): Job[] {
-	return jobs.filter(
-		(j) => j.kind === kind && (!languageId || j.languageId === languageId)
-	);
+	return jobs.filter((j) => j.kind === kind && (!languageId || j.languageId === languageId));
 }
 
 export function runningCount(): number {
@@ -82,7 +73,10 @@ export function startClozeJob(input: { languageId: string; topic: string; count:
 	return id;
 }
 
-async function runCloze(id: string, input: { languageId: string; topic: string; count: number }): Promise<void> {
+async function runCloze(
+	id: string,
+	input: { languageId: string; topic: string; count: number }
+): Promise<void> {
 	try {
 		const lang = getLanguage(input.languageId);
 		if (!lang) throw new Error('Language was deleted.');

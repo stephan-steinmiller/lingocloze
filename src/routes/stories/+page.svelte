@@ -80,7 +80,7 @@
 				<label class="fieldset">
 					<legend class="fieldset-legend">…or your own</legend>
 					<input
-						class="input "
+						class="input"
 						placeholder="e.g. a lost cat in Barcelona"
 						bind:value={customTopic}
 					/>
@@ -93,7 +93,7 @@
 	</div>
 
 	{#if jobs.length > 0}
-		<div class="grid gap-2 mb-4">
+		<div class="mb-4 grid gap-2">
 			{#each jobs as j (j.id)}
 				<div
 					class="card shadow-sm {j.status === 'error'
@@ -104,15 +104,18 @@
 				>
 					<div class="card-body flex-row items-center gap-3 px-4 py-3">
 						{#if j.status === 'running'}
-							<span class="loading loading-spinner loading-sm text-primary"></span>
+							<span class="loading loading-sm loading-spinner text-primary"></span>
 							<p class="flex-1 text-sm">Writing a story about “{j.topic}”…</p>
 						{:else if j.status === 'done'}
 							<HugeiconsIcon icon={CheckmarkCircle02Icon} size={20} class="text-success" />
 							<p class="flex-1 text-sm">
-								Story about “{j.topic}” ready{#if j.demo} (demo content){/if}.
+								Story about “{j.topic}” ready{#if j.demo}
+									(demo content){/if}.
 							</p>
 							{#if j.storyId}
-								<a href={resolve(`/stories/${j.storyId}`)} class="btn btn-primary btn-sm">Read now</a>
+								<a href={resolve(`/stories/${j.storyId}`)} class="btn btn-primary btn-sm"
+									>Read now</a
+								>
 							{/if}
 							<button class="btn btn-ghost btn-sm" onclick={() => dismissJob(j.id)}>Dismiss</button>
 						{:else}

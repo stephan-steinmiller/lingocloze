@@ -117,10 +117,10 @@ export const PROVIDERS: Array<{
 	{
 		id: 'openai',
 		name: 'OpenAI',
-		description: 'GPT-4o mini and friends. Good multilingual quality.',
+		description: 'ChatGPT 5.6 Luna and friends. Good multilingual quality.',
 		placeholder: 'sk-…',
-		defaultModel: 'gpt-4o-mini',
-		models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1'],
+		defaultModel: 'gpt-5.6-luna',
+		models: ['gpt-5.6-luna', 'gpt-4.1-mini', 'gpt-4.1'],
 		keyUrl: 'https://platform.openai.com/api-keys'
 	},
 	{
@@ -146,9 +146,9 @@ export const PROVIDERS: Array<{
 		name: 'OpenAI-compatible',
 		description: 'OpenRouter, Ollama, Together, LM Studio, custom gateway…',
 		placeholder: 'your key (or "ollama" for local)',
-		defaultModel: 'openai/gpt-4o-mini',
+		defaultModel: 'openai/gpt-5.6-luna',
 		models: [
-			'openai/gpt-4o-mini',
+			'openai/gpt-5.6-luna',
 			'anthropic/claude-3.5-haiku',
 			'meta-llama/llama-3.3-70b-instruct'
 		],
@@ -166,7 +166,7 @@ export const PROVIDERS: Array<{
 ];
 
 export function defaultSettings(): BYOKSettings {
-	return { provider: 'openai', model: 'gpt-4o-mini', apiKey: '', baseURL: '', proxyUrl: '' };
+	return { provider: 'openai', model: 'gpt-5.6-luna', apiKey: '', baseURL: '', proxyUrl: '' };
 }
 
 export function loadSettings(): BYOKSettings {
@@ -198,7 +198,10 @@ export function hasApiKey(s: BYOKSettings): boolean {
  * device with no proxy at all. Mirrors the header extras the server proxy
  * would otherwise inject (browser UA, x-opencode-session).
  */
-async function nativeDirectFetch(input: string | URL | Request, init?: RequestInit): Promise<Response> {
+async function nativeDirectFetch(
+	input: string | URL | Request,
+	init?: RequestInit
+): Promise<Response> {
 	const { CapacitorHttp } = await import('@capacitor/core');
 	const url = String(typeof input === 'string' || input instanceof URL ? input : input.url);
 	const headers: Record<string, string> = {};
@@ -247,60 +250,60 @@ async function nativeDirectFetch(input: string | URL | Request, init?: RequestIn
  */
 function makeProxyFetch(proxyUrl?: string): typeof fetch {
 	const explicit = proxyUrl?.trim() ? proxyUrl.trim() : null;
-	return (async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
-	if (!explicit) {
-		try {
-			if (Capacitor.isNativePlatform()) return await nativeDirectFetch(input, init);
-		} catch {
-			/* fall through to the proxy path */
-		}
-	}
-	const endpoint = explicit ?? '/api/zen';
-	let url: string;
-	let headers: Record<string, string> = {};
-	let body: unknown;
-	if (typeof input === 'string' || input instanceof URL) {
-		url = String(input);
-		if (init?.headers instanceof Headers) {
-			headers = Object.fromEntries(init.headers.entries());
-		} else if (init?.headers) {
-			headers = Object.fromEntries(new Headers(init.headers).entries());
-		}
-		if (typeof init?.body === 'string') {
+	return async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+		if (!explicit) {
 			try {
-				body = JSON.parse(init.body) as unknown;
+				if (Capacitor.isNativePlatform()) return await nativeDirectFetch(input, init);
 			} catch {
-				body = init.body;
+				/* fall through to the proxy path */
+			}
+		}
+		const endpoint = explicit ?? '/api/zen';
+		let url: string;
+		let headers: Record<string, string> = {};
+		let body: unknown;
+		if (typeof input === 'string' || input instanceof URL) {
+			url = String(input);
+			if (init?.headers instanceof Headers) {
+				headers = Object.fromEntries(init.headers.entries());
+			} else if (init?.headers) {
+				headers = Object.fromEntries(new Headers(init.headers).entries());
+			}
+			if (typeof init?.body === 'string') {
+				try {
+					body = JSON.parse(init.body) as unknown;
+				} catch {
+					body = init.body;
+				}
+			} else {
+				body = init?.body;
 			}
 		} else {
-			body = init?.body;
+			url = input.url;
+			headers = Object.fromEntries(input.headers.entries());
+			body = await input.text();
+			try {
+				body = JSON.parse(body as string) as unknown;
+			} catch {
+				/* keep as text */
+			}
 		}
-	} else {
-		url = input.url;
-		headers = Object.fromEntries(input.headers.entries());
-		body = await input.text();
-		try {
-			body = JSON.parse(body as string) as unknown;
-		} catch {
-			/* keep as text */
-		}
-	}
-	return fetch(endpoint, {
-		method: 'POST',
-		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({ url, headers, body })
-	}).then((res) => {
-		const contentType = res.headers.get('content-type') ?? '';
-		if (!contentType.includes('application/json')) {
-			// Static hosts (no server routes) answer with the SPA fallback page.
-			throw new Error(
-				'AI proxy unreachable: configure a CORS proxy URL below, use ' +
-					'OpenAI/Anthropic/Google keys directly, or run the dev server for gated providers (Zen/Go).'
-			);
-		}
-		return res;
-	});
-	});
+		return fetch(endpoint, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ url, headers, body })
+		}).then((res) => {
+			const contentType = res.headers.get('content-type') ?? '';
+			if (!contentType.includes('application/json')) {
+				// Static hosts (no server routes) answer with the SPA fallback page.
+				throw new Error(
+					'AI proxy unreachable: configure a CORS proxy URL below, use ' +
+						'OpenAI/Anthropic/Google keys directly, or run the dev server for gated providers (Zen/Go).'
+				);
+			}
+			return res;
+		});
+	};
 }
 
 /**
@@ -363,7 +366,7 @@ export function getLanguageModel(s: BYOKSettings): LanguageModel {
 		case 'openai':
 		default: {
 			const openai = createOpenAI({ apiKey });
-			return openai(s.model || 'gpt-4o-mini');
+			return openai(s.model || 'gpt-5.6-luna');
 		}
 	}
 }

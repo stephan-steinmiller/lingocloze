@@ -10,6 +10,17 @@ const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 
 export default defineConfig(
 	includeIgnoreFile(gitignorePath),
+	{
+		// Generated output: build artifacts, synced mobile assets, i18n codegen.
+		// (Also excluded from prettier via .prettierignore.)
+		ignores: [
+			'build/**',
+			'.svelte-kit/**',
+			'android/app/src/main/assets/**',
+			'src/lib/paraglide/**',
+			'project.inlang/cache/**'
+		]
+	},
 	js.configs.recommended,
 	ts.configs.recommended,
 	svelte.configs.recommended,

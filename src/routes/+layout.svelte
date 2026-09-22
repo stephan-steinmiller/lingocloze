@@ -14,8 +14,7 @@
 		Logout01Icon,
 		Settings03Icon,
 		StarIcon,
-		SwatchBookIcon,
-		UserCircleIcon
+		SwatchBookIcon
 	} from '@hugeicons/core-free-icons';
 	import favicon from '$lib/assets/favicon.svg';
 	import JobIndicator from '$lib/components/JobIndicator.svelte';
@@ -50,16 +49,6 @@
 		// Auth first (local session read), then the database.
 		await initAuth();
 		await initNativeDatabase();
-		// Tell Capgo OTA the bundled web app booted fine (native only).
-		try {
-			const { Capacitor } = await import('@capacitor/core');
-			if (Capacitor.isNativePlatform()) {
-				const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
-				await CapacitorUpdater.notifyAppReady();
-			}
-		} catch {
-			/* updater absent or web build — ignore */
-		}
 		dbReady = true;
 		reloadLanguages();
 	});
@@ -82,6 +71,7 @@
 		touchDb();
 	}
 
+	// `as const` keeps hrefs as route literals so the typed resolve() accepts them.
 	const nav = [
 		{ href: '/', label: 'Home', icon: Home05Icon },
 		{ href: '/review', label: 'Review', icon: Cards01Icon },
@@ -89,7 +79,7 @@
 		{ href: '/stories', label: 'Stories', icon: BookOpen01Icon },
 		{ href: '/words', label: 'Words', icon: SwatchBookIcon },
 		{ href: '/settings', label: 'Settings', icon: Settings03Icon }
-	];
+	] as const;
 	// Sidebar order: main destinations up top, collapse toggle below Words,
 	// Settings pinned to the bottom. (The mobile dock keeps all six in order.)
 	const mainNav = nav.filter((i) => i.href !== '/settings');
@@ -114,7 +104,7 @@
 		<div class="navbar sticky top-0 z-30 bg-base-100 shadow-sm lg:hidden">
 			<div class="flex-1">
 				<a href={resolve('/')} class="btn btn-ghost text-xl"
-					>lingocloze{' '}<span class="text-primary">✦</span></a
+					>lingocloze <span class="text-primary">✦</span></a
 				>
 			</div>
 			<div class="flex-none pr-2">
@@ -136,7 +126,7 @@
 		<!-- Bottom dock (mobile): all six destinations, no drawer needed. -->
 		<nav class="dock lg:hidden">
 			{#each nav as item (item.href)}
-				<a href={item.href} class:dock-active={isActive(item.href)} title={item.label}>
+				<a href={resolve(item.href)} class:dock-active={isActive(item.href)} title={item.label}>
 					<HugeiconsIcon icon={item.icon} size={22} />
 					<span class="dock-label">{item.label}</span>
 				</a>
@@ -149,7 +139,7 @@
 		<label for="nav-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 		<aside
 			class="menu min-h-full gap-1 bg-base-100 p-4 transition-[width] duration-300 ease-in-out {collapsed
-				? 'w-20 lg:w-20 rail-collapsed'
+				? 'rail-collapsed w-20 lg:w-20'
 				: 'w-48'}"
 		>
 			<li>
@@ -158,7 +148,7 @@
 					title="lingocloze home"
 					class="side-item text-xl font-bold {collapsed ? 'rail-circle' : ''}"
 				>
-					<span class="lg:hidden">lingocloze{' '}<span class="text-primary">✦</span></span>
+					<span class="lg:hidden">lingocloze <span class="text-primary">✦</span></span>
 					{#if collapsed}
 						<span class="hidden lg:inline-flex" title="lingocloze">
 							<HugeiconsIcon icon={StarIcon} size={22} class="text-primary" />
@@ -166,7 +156,7 @@
 					{:else}
 						<span
 							class="hidden overflow-hidden whitespace-nowrap transition-all duration-300 lg:inline-block lg:max-w-40 lg:opacity-100"
-							>lingocloze{' '}<span class="text-primary">✦</span></span
+							>lingocloze <span class="text-primary">✦</span></span
 						>
 					{/if}
 				</a>
@@ -174,7 +164,7 @@
 			{#each mainNav as item (item.href)}
 				<li title={collapsed ? item.label : undefined}>
 					<a
-						href={item.href}
+						href={resolve(item.href)}
 						class="side-item text-base {collapsed ? 'rail-circle' : ''}"
 						class:menu-active={isActive(item.href)}
 					>
@@ -235,7 +225,7 @@
 			{#if settingsNav}
 				<li title={collapsed ? settingsNav.label : undefined}>
 					<a
-						href={settingsNav.href}
+						href={resolve(settingsNav.href)}
 						class="side-item text-base {collapsed ? 'rail-circle' : ''}"
 						class:menu-active={isActive(settingsNav.href)}
 					>

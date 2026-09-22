@@ -43,7 +43,10 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 		return json({ error: 'URL host is not allowed.' }, { status: 400 });
 	}
 	if (target.protocol === 'http:' && !isLocalhost) {
-		return json({ error: 'Only https:// URLs are allowed (http only for localhost).' }, { status: 400 });
+		return json(
+			{ error: 'Only https:// URLs are allowed (http only for localhost).' },
+			{ status: 400 }
+		);
 	}
 	if (target.protocol !== 'http:' && target.protocol !== 'https:') {
 		return json({ error: 'Only http(s):// URLs are allowed.' }, { status: 400 });
@@ -92,6 +95,9 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 	try {
 		return json(JSON.parse(text) as unknown, { status: upstream.status });
 	} catch {
-		return json({ error: 'Upstream returned non-JSON.', text: text.slice(0, 500) }, { status: 502 });
+		return json(
+			{ error: 'Upstream returned non-JSON.', text: text.slice(0, 500) },
+			{ status: 502 }
+		);
 	}
 };

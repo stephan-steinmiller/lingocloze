@@ -238,9 +238,7 @@ export function adjustStoryLevel(
 	let next = current;
 	if (!understood) {
 		next = current - 1.5;
-	} else if (total <= 0) {
-		next = current;
-	} else {
+	} else if (total > 0) {
 		const ratio = score / total;
 		if (ratio >= 1) next = current + 0.7;
 		else if (ratio >= 0.7) next = current + 0.3;

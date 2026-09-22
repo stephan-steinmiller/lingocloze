@@ -2,7 +2,12 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getLanguages } from '$lib/db/database';
-	import { getActiveLanguageId, getDbRevision, setActiveLanguageId, touchDb } from '$lib/stores/app.svelte';
+	import {
+		getActiveLanguageId,
+		getDbRevision,
+		setActiveLanguageId,
+		touchDb
+	} from '$lib/stores/app.svelte';
 	import { getUser } from '$lib/stores/auth.svelte';
 
 	// Re-read on every db touch AND on account switch (stores are per-user).

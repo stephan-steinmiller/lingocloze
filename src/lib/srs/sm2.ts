@@ -39,7 +39,8 @@ export function reviewSrs(
 	prevLapses = 0
 ): SrsResult {
 	const quality = gradeToQuality(grade);
-	let { easeFactor, interval, repetitions } = state;
+	let { easeFactor, repetitions } = state;
+	const { interval } = state;
 
 	// Update ease factor: EF' = EF + (0.1 - (5-q) * (0.08 + (5-q) * 0.02))
 	easeFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));

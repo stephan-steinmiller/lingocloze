@@ -148,9 +148,7 @@ export function promotionEligibility(
 		reasons.push(`${needWords - knownWords} more known words needed for ${next}.`);
 	}
 	if (totalReviews < PROMOTION_MIN_REVIEWS) {
-		reasons.push(
-			`Need at least ${PROMOTION_MIN_REVIEWS} graded reviews (${totalReviews} so far).`
-		);
+		reasons.push(`Need at least ${PROMOTION_MIN_REVIEWS} graded reviews (${totalReviews} so far).`);
 	} else if (base.recall < PROMOTION_MIN_RECALL) {
 		reasons.push(
 			`Recall is ${Math.round(base.recall * 100)}% — need ${PROMOTION_MIN_RECALL * 100}% for ${next}.`
