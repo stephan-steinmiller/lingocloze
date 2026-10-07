@@ -9,10 +9,11 @@
 		ViewOffIcon,
 		CheckmarkCircle02Icon,
 		UserCircleIcon,
-		Logout01Icon
+		Logout01Icon,
+		CloudIcon
 	} from '@hugeicons/core-free-icons';
 	import ThemeSelect from '$lib/components/ThemeSelect.svelte';
-	import { getUser, signOut } from '$lib/stores/auth.svelte';
+	import { getUser, isSupabaseConfigured, signOut } from '$lib/stores/auth.svelte';
 	import { touchDb } from '$lib/stores/app.svelte';
 	import {
 		PROVIDERS,
@@ -22,16 +23,38 @@
 		type AIProvider
 	} from '$lib/ai/providers';
 	import { exportDatabase, importDatabase, resetDatabase } from '$lib/db/database';
+	import {
+		getLastSyncAt,
+		getSyncError,
+		isCloudSyncAvailable,
+		isSyncing,
+		syncNow
+	} from '$lib/db/supabase-sync.svelte';
 
 	let settings = $state(loadSettings());
 	let showKey = $state(false);
 	let savedTick = $state(false);
 	let ioError = $state('');
 	let user = $derived(getUser());
+	let syncBusy = $derived(isSyncing());
+	let syncError = $derived(getSyncError());
+	let lastSync = $derived(getLastSyncAt());
+	let cloudReady = $derived(isCloudSyncAvailable());
 
 	async function logout(): Promise<void> {
 		await signOut();
 		touchDb();
+	}
+
+	async function sync(): Promise<void> {
+		ioError = '';
+		try {
+			const { pulled } = await syncNow();
+			touchDb();
+			if (pulled) goto(resolve('/'));
+		} catch (err) {
+			ioError = err instanceof Error ? err.message : 'Sync failed.';
+		}
 	}
 
 	function save(): void {
@@ -227,6 +250,52 @@
 					<HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} /> saved</span
 				>{/if}
 		</div>
+	</div>
+</div>
+
+<div class="card mb-4 bg-base-100 shadow-sm">
+	<div class="card-body">
+		<h2 class="card-title">
+			<HugeiconsIcon icon={CloudIcon} size={22} /> Cloud sync
+		</h2>
+		{#if !isSupabaseConfigured()}
+			<p class="text-sm opacity-70">
+				Supabase isn't configured in this build — set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+				to enable backup.
+			</p>
+		{:else if !user}
+			<p class="text-sm opacity-70">
+				Log in to back up progress to Supabase and restore it on other devices. Edits auto-push in
+				the background while you're logged in.
+			</p>
+			<div class="mt-2">
+				<button class="btn btn-primary btn-sm" onclick={() => goto(resolve('/login'))}>
+					Log in to sync
+				</button>
+			</div>
+		{:else if !cloudReady}
+			<p class="text-sm opacity-70">Finishing sign-in… sync will unlock in a moment.</p>
+		{:else}
+			<p class="text-sm opacity-70">
+				Logged in as {user.email}. Local-first: edits save instantly here and push to your private
+				Supabase tables in the background (local wins on conflict). Pull restores other-device rows
+				on login.
+			</p>
+			<div class="mt-2 flex flex-wrap items-center gap-2">
+				<button class="btn btn-primary btn-sm" disabled={syncBusy} onclick={sync}>
+					{#if syncBusy}<span class="loading loading-sm loading-spinner"></span>{/if}
+					Sync now
+				</button>
+				{#if lastSync}
+					<span class="text-xs opacity-60">
+						last sync {new Date(lastSync).toLocaleString()}
+					</span>
+				{:else}
+					<span class="text-xs opacity-60">never synced on this device</span>
+				{/if}
+			</div>
+			{#if syncError}<p class="mt-2 text-sm text-error">{syncError}</p>{/if}
+		{/if}
 	</div>
 </div>
 

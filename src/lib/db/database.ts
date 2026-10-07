@@ -108,6 +108,28 @@ function load(): DatabaseShape {
 				migrated = true;
 			}
 		}
+		// Migrate legacy language ids: v1 used the bare ISO code ("es") as
+		// the primary key, which collides across Supabase users (global PK).
+		// Remap to globally-unique ids once, rewriting child language refs.
+		const remap = new Map<string, string>();
+		for (const l of db.languages) {
+			if (l.id === l.code) {
+				const next = uid('lang');
+				remap.set(l.id, next);
+				l.id = next;
+				l.updatedAt = Date.now();
+				migrated = true;
+			}
+		}
+		if (remap.size > 0) {
+			const fix = (id: string): string => remap.get(id) ?? id;
+			for (const w of db.words) w.languageId = fix(w.languageId);
+			for (const d of db.decks) d.languageId = fix(d.languageId);
+			for (const c of db.cards) c.languageId = fix(c.languageId);
+			for (const l of db.reviewLogs) l.languageId = fix(l.languageId);
+			for (const s of db.stories) s.languageId = fix(s.languageId);
+			for (const a of db.attempts) a.languageId = fix(a.languageId);
+		}
 		if (migrated) save(db);
 		return db;
 	} catch {
@@ -149,8 +171,13 @@ export function createLanguage(input: {
 	levelScore: number;
 }): TargetLanguage {
 	const now = Date.now();
+	// One entry per ISO code per store: re-use the existing row when the
+	// user adds the same language twice (legacy stores used id === code).
+	const existing = load().languages.find((l) => l.code === input.code);
+	if (existing) return existing;
 	const lang: TargetLanguage = {
-		id: input.code,
+		// Globally unique (Supabase PK is global): never the bare code.
+		id: uid('lang'),
 		code: input.code,
 		name: input.name,
 		level: input.level,
@@ -161,6 +188,10 @@ export function createLanguage(input: {
 		updatedAt: now
 	};
 	return upsertLanguage(lang);
+}
+
+export function getLanguageByCode(code: string): TargetLanguage | undefined {
+	return load().languages.find((l) => l.code === code);
 }
 
 export function updateLanguage(

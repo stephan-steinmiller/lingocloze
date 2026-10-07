@@ -21,6 +21,7 @@
 	import { initNativeDatabase } from '$lib/db/capacitor';
 	import {
 		getActiveLanguageId,
+		getDbRevision,
 		isSidebarCollapsed,
 		refreshActiveLanguage,
 		setActiveLanguageId,
@@ -28,6 +29,7 @@
 		touchDb
 	} from '$lib/stores/app.svelte';
 	import { getLanguages, migrateLegacyStore } from '$lib/db/database';
+	import { pullRemote, schedulePush } from '$lib/db/supabase-sync.svelte';
 	import { getUser, initAuth, signOut } from '$lib/stores/auth.svelte';
 	import './layout.css';
 
@@ -51,19 +53,58 @@
 		await initNativeDatabase();
 		dbReady = true;
 		reloadLanguages();
+		// Cloud restore (logged in only, background): pull other-device rows
+		// then refresh. Failures surface in Settings → Cloud sync.
+		if (getUser()?.id) {
+			pullRemote()
+				.then((added) => {
+					if (added) {
+						refreshActiveLanguage();
+						reloadLanguages();
+						touchDb();
+					}
+				})
+				.catch(() => {
+					/* settings page shows the error */
+				});
+		}
 	});
 
 	// React to login / logout / account switch: migrate device data once,
 	// re-point the active language, and refresh every revision-tracked view.
+	// On fresh login also pull cloud rows (new device → restore).
 	let lastUid: string | null | undefined = undefined;
 	$effect(() => {
 		const uid = getUser()?.id ?? null;
 		if (uid === lastUid) return;
 		lastUid = uid;
-		if (uid) migrateLegacyStore(uid);
-		refreshActiveLanguage();
-		reloadLanguages();
-		touchDb();
+		if (uid) {
+			migrateLegacyStore(uid);
+			pullRemote()
+				.then((added) => {
+					if (added) reloadLanguages();
+					refreshActiveLanguage();
+					reloadLanguages();
+					touchDb();
+				})
+				.catch(() => {
+					refreshActiveLanguage();
+					reloadLanguages();
+					touchDb();
+				});
+		} else {
+			refreshActiveLanguage();
+			reloadLanguages();
+			touchDb();
+		}
+	});
+
+	// Background cloud backup: every local mutation bumps dbRevision via
+	// touchDb(); debounce-push to Supabase when logged in.
+	let rev = $derived(getDbRevision());
+	$effect(() => {
+		void rev;
+		if (getUser()?.id) schedulePush();
 	});
 
 	async function logout(): Promise<void> {

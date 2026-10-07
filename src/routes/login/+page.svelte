@@ -74,6 +74,15 @@
 		try {
 			await verifyOtp(email, code);
 			touchDb();
+			// Best-effort cloud restore right after login (new device).
+			// The layout also pulls; failure just leaves local data.
+			try {
+				const { syncNow } = await import('$lib/db/supabase-sync.svelte');
+				await syncNow();
+				touchDb();
+			} catch {
+				/* offline or RLS hiccup — local-first still works */
+			}
 			await goto(resolve('/'));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Code not accepted. Try again.';
@@ -86,8 +95,11 @@
 		error = '';
 		busy = true;
 		try {
-			await signInWithOAuth(provider);
-			// Redirects away; the layout picks up the session on return.
+			// Redirects to /auth/callback?next=/ which exchanges the PKCE
+			// code and lands back home. Ensure that URL is allow-listed in
+			// Supabase Auth → URL Configuration → Redirect URLs.
+			await signInWithOAuth(provider, '/');
+			// Redirects away; the callback page picks up the session on return.
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'OAuth failed.';
 			busy = false;

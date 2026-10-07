@@ -28,7 +28,7 @@
 	let result = $state<(ProficiencyResult & { aiRefined: boolean }) | null>(null);
 	let resultEl: HTMLElement | undefined = $state();
 
-	const existing = new Set(getLanguages().map((l) => l.id));
+	const existing = new Set(getLanguages().map((l) => l.code));
 	const langName = (c: string) => SUPPORTED_LANGUAGES.find((l) => l.code === c)?.name ?? c;
 
 	async function startCheck(selected: string): Promise<void> {

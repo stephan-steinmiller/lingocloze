@@ -1,12 +1,33 @@
 import { createClient, type Session, type SupabaseClient, type User } from '@supabase/supabase-js';
+import { browser } from '$app/environment';
 import { SvelteURL, SvelteURLSearchParams } from 'svelte/reactivity';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-export const isSupabaseConfigured = (): boolean => !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
+export const isSupabaseConfigured = (): boolean =>
+	!!SUPABASE_URL?.trim() && !!SUPABASE_ANON_KEY?.trim();
 
 let client: SupabaseClient | null = null;
+
+/**
+ * Where magic-link / OAuth emails send the user back: the dedicated
+ * client-only /auth/callback page, which exchanges the PKCE code and forwards
+ * to `next`. Works on static hosts (surge.sh) and dev with no server route.
+ * Undefined on native shells (capacitor://) and SSR — there the 6-digit OTP
+ * code is the way in, since an https redirect can't return in-app.
+ * Supabase must allow-list `<origin>/auth/callback` in Redirect URLs.
+ */
+function callbackUrl(next = '/'): string | undefined {
+	if (!browser) return undefined;
+	try {
+		if (!/^https?:$/.test(window.location.protocol)) return undefined;
+		const origin = window.location.origin;
+		return `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+	} catch {
+		return undefined;
+	}
+}
 
 /** Lazily created browser client (null when env is missing, e.g. tests). */
 export function getSupabase(): SupabaseClient | null {
@@ -14,6 +35,12 @@ export function getSupabase(): SupabaseClient | null {
 	if (!isSupabaseConfigured()) return null;
 	client = createClient(SUPABASE_URL as string, SUPABASE_ANON_KEY as string, {
 		auth: {
+			// Static SPA (adapter-static, no server): sessions live in
+			// localStorage. PKCE + detectSessionInUrl lets the client pick up
+			// `?code=` after OAuth/magic-link without any server code.
+			// (We deliberately do NOT use @supabase/ssr here — that package
+			// is for cookie-based SSR apps with a server; this app has none
+			// on static hosts.)
 			flowType: 'pkce',
 			detectSessionInUrl: true,
 			persistSession: true,
@@ -23,20 +50,9 @@ export function getSupabase(): SupabaseClient | null {
 	return client;
 }
 
-/**
- * Where magic-link / OAuth emails should send the user back: the existing
- * prerendered /login page, which knows how to exchange the callback for a
- * session. Undefined on native shells (capacitor://) and SSR — there the
- * 6-digit OTP code is the way in, since an https redirect can't return in-app.
- */
-function loginRedirectUrl(): string | undefined {
-	try {
-		if (typeof window === 'undefined') return undefined;
-		if (!/^https?:$/.test(window.location.protocol)) return undefined;
-		return `${window.location.origin}/login`;
-	} catch {
-		return undefined;
-	}
+/** Test-only: drop the singleton so env changes take effect. */
+export function resetSupabaseForTests(): void {
+	client = null;
 }
 
 // ---- Reactive session state -------------------------------------------------
@@ -68,22 +84,65 @@ export async function initAuth(): Promise<void> {
 	try {
 		// Returning from a magic-link / OAuth redirect (e.g. an old link that
 		// landed on /): consume the callback before reading the session.
+		// With detectSessionInUrl:true the client also auto-exchanges `?code=`
+		// during getSession() on the OAuth return trip; the dedicated
+		// /auth/callback page exchanges explicitly too (more reliable on
+		// static hosts where the first load may race init).
 		try {
 			await handleAuthCallback();
 		} catch {
 			/* bad/expired link — surfaced on /login; ignore elsewhere */
 		}
-		const { data } = await sb.auth.getSession();
+		const { data, error } = await sb.auth.getSession();
+		if (error) console.warn('[auth] getSession failed:', error.message);
 		applySession(data.session);
-	} catch {
+	} catch (err) {
+		console.warn('[auth] init failed:', err instanceof Error ? err.message : err);
 		sessionChecked = true;
 	}
 	if (!authListenerStarted) {
 		authListenerStarted = true;
-		sb.auth.onAuthStateChange((_event, newSession) => {
+		sb.auth.onAuthStateChange((event, newSession) => {
+			// TOKEN_REFRESHED / SIGNED_IN / SIGNED_OUT all funnel here and
+			// keep the layout's per-account stores in sync.
+			if (event === 'SIGNED_OUT') {
+				user = null;
+				sessionChecked = true;
+				return;
+			}
 			applySession(newSession);
 		});
 	}
+}
+
+/**
+ * Exchange an OAuth/magic-link `?code=` for a session. Used by the
+ * client-only /auth/callback page. Returns the `next` path to continue to.
+ */
+export async function exchangeCodeForSession(code: string): Promise<string> {
+	const sb = getSupabase();
+	if (!sb) throw new Error('Supabase is not configured.');
+	const { data, error } = await sb.auth.exchangeCodeForSession(code);
+	if (error) throw error;
+	applySession(data.session);
+	try {
+		// One-shot read: plain URL is correct here (not reactive SvelteURL).
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const next = new URL(window.location.href).searchParams.get('next');
+		return next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
+	} catch {
+		return '/';
+	}
+}
+
+export function getSession(): Promise<Session | null> {
+	const sb = getSupabase();
+	if (!sb) return Promise.resolve(null);
+	return sb.auth.getSession().then(({ data }) => data.session);
+}
+
+export function getAccessToken(): Promise<string | null> {
+	return getSession().then((s) => s?.access_token ?? null);
 }
 
 export async function sendOtp(email: string): Promise<void> {
@@ -91,7 +150,13 @@ export async function sendOtp(email: string): Promise<void> {
 	if (!sb) throw new Error('Supabase is not configured.');
 	const { error } = await sb.auth.signInWithOtp({
 		email: email.trim(),
-		options: { shouldCreateUser: true, emailRedirectTo: loginRedirectUrl() }
+		options: {
+			shouldCreateUser: true,
+			// Magic-link clicks land on the client callback page, which
+			// exchanges the code and forwards to `next`. 6-digit codes typed
+			// into /login ignore this and verify via verifyOtp().
+			emailRedirectTo: callbackUrl('/') ?? undefined
+		}
 	});
 	if (error) throw error;
 }
@@ -125,7 +190,12 @@ export async function handleAuthCallback(): Promise<boolean> {
 		const { error } = await sb.auth.verifyOtp({
 			token_hash: tokenHash,
 			type: (typeParam || 'email') as
-				'email' | 'magiclink' | 'recovery' | 'invite' | 'email_change' | 'signup'
+				| 'email'
+				| 'magiclink'
+				| 'recovery'
+				| 'invite'
+				| 'email_change'
+				| 'signup'
 		});
 		if (error) throw error;
 	} else {
@@ -156,16 +226,14 @@ export async function verifyOtp(email: string, code: string): Promise<void> {
 }
 
 export async function signInWithOAuth(
-	provider: 'google' | 'github' | 'apple' | 'discord'
+	provider: 'google' | 'github' | 'apple' | 'discord',
+	next = '/'
 ): Promise<void> {
 	const sb = getSupabase();
 	if (!sb) throw new Error('Supabase is not configured.');
 	const { error } = await sb.auth.signInWithOAuth({
 		provider,
-		options: {
-			redirectTo:
-				loginRedirectUrl() ?? (typeof window !== 'undefined' ? window.location.origin : undefined)
-		}
+		options: { redirectTo: callbackUrl(next) ?? undefined }
 	});
 	if (error) throw error;
 }
